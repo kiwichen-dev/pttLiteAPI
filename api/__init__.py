@@ -1,8 +1,11 @@
-from flask import flask
+from flask import Flask
 from flask_restful import Resource,Api
 from pymysqlpool.pool import Pool
-from config import PymysqlConfig
+from api.config import PymysqlConfig
+from flask_sqlalchemy import SQLAlchemy
+from api.config import SQLAlchemy_config
 
+db = SQLAlchemy()
 
 def getCursor():
     pool = Pool(
@@ -16,8 +19,15 @@ def getCursor():
     connection = pool.get_conn()
     return connection.cursor()
 
-    return 
-def create_app():
-    app = flask(__name__)
-    return app
+from api.route import index, article, search, all_board
 
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(SQLAlchemy_config)
+    db.init_app(app)
+    app.add_url_rule('/', 'index', index)
+    app.add_url_rule('/<board>','board', all_board)
+    app.add_url_rule('/<board>/<article_number>','article',article)
+    #app.add_url_rule('/<bbs>/<board>/<page>', 'article', article)
+    app.add_url_rule('/search', 'search', search, methods=['GET','POST'])
+    return app

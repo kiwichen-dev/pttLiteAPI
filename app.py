@@ -1,7 +1,8 @@
 from api import create_app
-from api import pool
 
 app = create_app()
 
+from api.route import hotBoard,index,article,search
+
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
