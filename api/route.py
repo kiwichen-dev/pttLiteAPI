@@ -105,3 +105,33 @@ def search():
         except Exception as e:
             print(e)
         """
+
+def register():
+    cursor = getCursor()
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    """
+    if request.method == 'POST':
+        email = request.form.get('email')
+        nickname = request.form.get('nickname')
+        password = request.form.get('password')
+        checkPassword = request.form.get('check_password')
+        
+        if password == checkPassword:
+            user = User(email=email, nickname=nickname, password=password)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            return redirect(url_for('index'))
+        else:
+            cursor.close()
+
+def user(username):
+    cursor = getCursor()
+    sql = "SELECT email FROM user WHERE email = '%s'" % (username)
+    cursor.execute(sql)
+    if cursor.fetchone() !=  None:
+        return username
+    else:
+        return {'message':'user not found'},404

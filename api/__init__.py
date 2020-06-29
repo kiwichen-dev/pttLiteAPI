@@ -19,7 +19,7 @@ def getCursor():
     connection = pool.get_conn()
     return connection.cursor()
 
-from api.route import index, article, search, all_board
+from api.route import index, article, search, all_board, user
 
 def create_app():
     app = Flask(__name__)
@@ -30,4 +30,5 @@ def create_app():
     app.add_url_rule('/<board>/<article_number>','article',article)
     #app.add_url_rule('/<bbs>/<board>/<page>', 'article', article)
     app.add_url_rule('/search', 'search', search, methods=['GET','POST'])
+    app.add_url_rule('/user/<username>', 'user', user, methods=['GET','POST'])
     return app
