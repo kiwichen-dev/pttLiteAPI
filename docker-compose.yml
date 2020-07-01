@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
 
-  restfulAPI:
+  restfulapi:
     build: ./restfulAPI
     container_name: restfulAPI
     restart: always
