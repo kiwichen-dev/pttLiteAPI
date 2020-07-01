@@ -28,7 +28,8 @@ class Index(Resource):
         cursor.execute(sql)
         distinct_board_name = cursor.fetchall()
 
-        res = list()
+        distinct_board_name_top = list()
+        board_to_list = dict()
         for d in distinct_board_name:
             #sql = "select * from(select * from article order by push_count desc) as s group by board_name"
             sql = "SELECT * FROM article WHERE board_name = '%s' ORDER BY push_count DESC LIMIT 1" % (d['board_name'])
@@ -64,14 +65,17 @@ class Index(Resource):
                 del d_result['article_number']
                 del d_result['last_update']
                 del d_result['push_count']
-                res.append(d_result)
+                distinct_board_name_top.append(d_result)
         
         query_result = cursor.fetchall()
         cursor.close()
         package = dict()
-        package['article'] = res
+        package['article'] = distinct_board_name_top
+        for d in disscussRank[0:8]:
+            d['board_url'] = '/board/' + d['board_name']
         package['hotboard'] = disscussRank[0:8]
         package['image'] = '/index.jpg'
+        print(board_to_list)
         return jsonify(package)
 
 class Board(Resource):
@@ -127,19 +131,24 @@ class Article(Resource):
             sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='噓 '" % (article_number)
             cursor.execute(sql)
             unlike = cursor.fetchone()
+
+            sql = "SELECT respone_type,respone_user_id,disscuss,respone_user_ip,create_time FROM article_disscuss WHERE article_number ='%s'" % (article_number)
+            cursor.execute(sql)
+            article_disscuss = cursor.fetchall()
             cursor.close()
 
             article = dict()
+            article['article_url'] = '/' + article_content['board_name'] + '/' + article_content['article_number']
             article['board_name'] = article_content['board_name']
             article['article_number'] = article_content['article_number'] 
             article['title'] = article_content['title']
             article['author'] = article_content['author']
-            article['author_ip'] = article_content['author_ip']
+            article['author_ip'] = article_content['author_ip'].split('(')[-1].replace(')','')
             article['body'] = article_content['body']
             article['push_count'] = article_content['push_count']
             article['create_time'] = str(article_content['create_time'])
-            article['last_update'] = str(article_content['last_update'])
-            return article
+            article['disscuss'] = article_disscuss
+            return jsonify(article)
 
         else:
             return {'message':'article not found'},404
@@ -156,3 +165,18 @@ def search():
         print(searchingResult)
         cursor.close()
         return jsonify('search.html',searchingResult=searchingResult)
+
+class BoardToList(Resource):
+    def get(self):
+        db = connection()
+        cursor = db.cursor()
+        sql = "SELECT DISTINCT board_name FROM category ORDER BY board_name ASC"
+        cursor.execute(sql)
+        distinct_board_name = cursor.fetchall()
+
+        board_to_list = dict()
+        i = 0
+        for d in distinct_board_name:
+            board_to_list[str(d['board_name'])] = str(i)
+            i += 1
+        return jsonify(board_to_list)

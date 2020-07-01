@@ -20,10 +20,25 @@ def connection():
     return pool.get_conn()
 
 from api.resource.user import User
-from api.resource.boardArticle import Index,All_board,Article,Board
+from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList
+from flask.json import JSONEncoder
+from datetime import date
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        try:
+            if isinstance(obj, date):
+                return obj.isoformat()
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)
 
 def create_app():
     app = Flask(__name__)
+    app.json_encoder = CustomJSONEncoder
     api = Api(app)
     app.config.from_object(SQLAlchemy_config)
     db.init_app(app)
@@ -32,6 +47,7 @@ def create_app():
     api.add_resource(Board,'/board/<string:board_name>')
     api.add_resource(Article,'/<string:board>/<string:article_number>')
     api.add_resource(User,'/user/<string:username>')
+    api.add_resource(BoardToList,'/boardtolist')
     """
     app.add_url_rule('/', 'index', index)
     app.add_url_rule('/<board>','board', all_board)
