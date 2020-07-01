@@ -15,4 +15,5 @@ pymysql-pooling==1.0.6
 pytz==2020.1
 six==1.15.0
 SQLAlchemy==1.3.17
+uWSGI==2.0.19.1
 Werkzeug==1.0.1

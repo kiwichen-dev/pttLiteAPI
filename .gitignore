@@ -113,6 +113,7 @@ ENV/
 env.bak/
 venv.bak/
 .pttLiteAPI/
+resrtfulAPI/.pttLiteAPI/
 
 # Spyder project settings
 .spyderproject
