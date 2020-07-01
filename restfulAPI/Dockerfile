@@ -1,8 +1,8 @@
 FROM python:3.7.7-stretch
 
-WORKDIR /flask
+WORKDIR /restfulAPI
 
-ADD . /flask
+ADD . /restfulAPI
 
 RUN pip install -r requirements.txt
 
