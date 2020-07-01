@@ -7,7 +7,7 @@ from api.config import SQLAlchemy_config
 
 db = SQLAlchemy()
 
-def getCursor():
+def connection():
     pool = Pool(
                 host=PymysqlConfig.host,
                 port=PymysqlConfig.port, 
@@ -16,19 +16,27 @@ def getCursor():
                 db=PymysqlConfig.db
                 )
     pool.init()
-    connection = pool.get_conn()
-    return connection.cursor()
+    pool.get_conn()
+    return pool.get_conn()
 
-from api.route import index, article, search, all_board, user
+from api.resource.user import User
+from api.resource.boardArticle import Index,All_board,Article,Board
 
 def create_app():
     app = Flask(__name__)
+    api = Api(app)
     app.config.from_object(SQLAlchemy_config)
     db.init_app(app)
+    api.add_resource(Index,'/')
+    api.add_resource(All_board)
+    api.add_resource(Board,'/board/<string:board_name>')
+    api.add_resource(Article,'/<string:board>/<string:article_number>')
+    api.add_resource(User,'/user/<string:username>')
+    """
     app.add_url_rule('/', 'index', index)
     app.add_url_rule('/<board>','board', all_board)
     app.add_url_rule('/<board>/<article_number>','article',article)
-    #app.add_url_rule('/<bbs>/<board>/<page>', 'article', article)
     app.add_url_rule('/search', 'search', search, methods=['GET','POST'])
     app.add_url_rule('/user/<username>', 'user', user, methods=['GET','POST'])
+    """
     return app
