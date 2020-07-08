@@ -37,9 +37,9 @@ class User(Resource):
         sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
         cursor.execute(sql)
         if cursor.fetchone():
-            return {'message':'user exist'}
+            return {'message':'user already exist'}
         else:
-            return {'message': 'user not found'}, 404
+            return {'message': 'user not found'},204
 
     def post(self, username):
         data = User.parser.parse_args()
@@ -51,7 +51,7 @@ class User(Resource):
         cursor.execute(sql)
         if cursor.fetchone():
             cursor.close()
-            return {'message': 'user already exist'},404
+            return {'message': 'user already exist'}
         else:
             """
             u = UserModel(username,password)
