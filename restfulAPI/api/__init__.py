@@ -3,7 +3,6 @@ from flask_restful import Resource,Api
 from pymysqlpool.pool import Pool
 from api.config import PymysqlConfig
 from flask_sqlalchemy import SQLAlchemy
-from api.config import SQLAlchemy_config
 
 db = SQLAlchemy()
 
@@ -19,40 +18,32 @@ def connection():
     pool.get_conn()
     return pool.get_conn()
 
-from api.resource.user import User
+from api.resource.user import User,Login,Protected
 from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList
-from flask.json import JSONEncoder
 from datetime import date
-
-class CustomJSONEncoder(JSONEncoder):
-    def default(self, obj):
-        try:
-            if isinstance(obj, date):
-                return obj.isoformat()
-            iterable = iter(obj)
-        except TypeError:
-            pass
-        else:
-            return list(iterable)
-        return JSONEncoder.default(self, obj)
+from api.config import SQLAlchemy_config
+from api.model.JSONEncoder import CustomJSONEncoder
+from api.model.user import UserModel
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 
 def create_app():
     app = Flask(__name__)
+    app.config['JWT_SECRET_KEY'] = 'super-secret'
+    app.config['PROPAGATE_EXCEPTIONS'] = True
     app.json_encoder = CustomJSONEncoder
     api = Api(app)
     app.config.from_object(SQLAlchemy_config)
     db.init_app(app)
+    jwt = JWTManager(app)
     api.add_resource(Index,'/')
     api.add_resource(All_board)
     api.add_resource(Board,'/board/<string:board_name>')
     api.add_resource(Article,'/<string:board>/<string:article_number>')
     api.add_resource(User,'/user/<string:username>')
     api.add_resource(BoardToList,'/boardtolist')
-    """
-    app.add_url_rule('/', 'index', index)
-    app.add_url_rule('/<board>','board', all_board)
-    app.add_url_rule('/<board>/<article_number>','article',article)
-    app.add_url_rule('/search', 'search', search, methods=['GET','POST'])
-    app.add_url_rule('/user/<username>', 'user', user, methods=['GET','POST'])
-    """
+    api.add_resource(Login,'/login')
+    api.add_resource(Protected,'/protected')
     return app

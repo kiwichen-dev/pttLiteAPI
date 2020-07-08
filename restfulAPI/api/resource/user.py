@@ -2,8 +2,11 @@ from flask_restful import Resource, reqparse
 from flask import request, current_app
 from api import connection
 import json
-#from flask_jwt import jwt_required
-#from restdemo.model.user import User as UserModel
+from api.model.user import UserModel
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 
 def min_length_str(min_length):
     def validate(s):
@@ -17,7 +20,6 @@ def min_length_str(min_length):
         raise Exception("String must be at least %i characters long" % min_length)
     return validate
 
-
 class User(Resource):
 
     parser = reqparse.RequestParser()
@@ -30,7 +32,6 @@ class User(Resource):
     )
 
     def get(self, username):
-        print(username)
         db = connection()
         cursor = db.cursor()
         sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
@@ -43,20 +44,31 @@ class User(Resource):
     def post(self, username):
         data = User.parser.parse_args()
         email = data['email']
-        pw = data['password']
+        password = data['password']
         db = connection()
         cursor = db.cursor()
         sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
         cursor.execute(sql)
         if cursor.fetchone():
             cursor.close()
-            return {'message': 'user already exist'}
+            return {'message': 'user already exist'},404
         else:
-            sql = "INSERT INTO user(nickname,email,pw) VALUES('%s','%s','%s')" % (username,email,pw)
+            """
+            u = UserModel(username,password)
+            password_hash = u.set_password()
+            """
+            u = UserModel()
+            password_hash = u.set_password(password)
+            sql = "INSERT INTO user(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
             cursor.execute(sql)
             db.commit()
             cursor.close()
             return {'message':'user has been created'}, 201
+    
+    @jwt_required
+    def booking(self):
+        return {"message":"token is working"},201
+    
     """
     def delete(self, username):
         user = UserModel.get_by_username(username)
@@ -75,12 +87,25 @@ class User(Resource):
             return user.as_dict()
         else:
             return {'message': "user not found"}, 204    
-
-
-class UserList(Resource):
-
-    @jwt_required()
-    def get(self):
-        users = UserModel.get_user_list()
-        return [u.as_dict() for u in users]
     """
+
+class Login(Resource):
+    def post(self):
+        data = User.parser.parse_args()
+        email = data['email']
+        password = data['password']
+        u = UserModel()
+        u.check_password(email,password)
+        if u.check_password(email,password) == True:
+            access_token = create_access_token(identity=email)
+            return {
+                'access_token': access_token
+            }, 200
+
+class Protected(Resource):
+    @jwt_required
+    def get(self):
+        identity = get_jwt_identity()
+        return {
+            'identity': identity
+        }, 200

@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 class SQLAlchemy_config():
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL","mysql+pymysql://flask:quQ351dTx@1.34.134.247:3306/TEST")

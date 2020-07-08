@@ -2,7 +2,6 @@ from flask import jsonify, request, current_app
 from api import connection
 from api.model.boardArticle import Category,Article,Article_disscuss
 from flask_restful import Resource, reqparse
-from flask_jwt import jwt_required, current_identity
 import re
 
 class Index(Resource):
