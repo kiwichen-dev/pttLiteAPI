@@ -18,7 +18,7 @@ def connection():
     pool.get_conn()
     return pool.get_conn()
 
-from api.resource.user import User,Login,Protected
+from api.resource.user import User,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticle,GetFollowingBoard
 from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList
 from datetime import date
 from api.config import SQLAlchemy_config
@@ -32,6 +32,7 @@ from flask_jwt_extended import (
 def create_app():
     app = Flask(__name__)
     app.config['JWT_SECRET_KEY'] = 'super-secret'
+    app.config['JWT_TOKEN_LOCATION'] = ['headers', 'query_string']
     app.config['PROPAGATE_EXCEPTIONS'] = True
     app.json_encoder = CustomJSONEncoder
     api = Api(app)
@@ -46,4 +47,8 @@ def create_app():
     api.add_resource(BoardToList,'/boardtolist')
     api.add_resource(Login,'/login')
     api.add_resource(Protected,'/protected')
+    api.add_resource(FollowBoard,'/follow/<string:board>')
+    api.add_resource(GetFollowingBoard,'/following_board')
+    api.add_resource(FollowArticle,'/follow/<string:board>/<string:article_number>')
+    api.add_resource(GetFollowingArticle,'/following_article')
     return app

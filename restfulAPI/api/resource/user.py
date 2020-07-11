@@ -21,7 +21,6 @@ def min_length_str(min_length):
     return validate
 
 class User(Resource):
-
     parser = reqparse.RequestParser()
     parser.add_argument(
         'password', type=min_length_str(8), required=True,
@@ -88,6 +87,40 @@ class User(Resource):
         else:
             return {'message': "user not found"}, 204    
     """
+
+class FollowBoard(Resource):
+    @jwt_required 
+    def post(self,board):
+        email = get_jwt_identity() #這行如果驗證錯誤自己會reject
+        u = UserModel()
+        if u.follow_board(email,board) == True:
+            return {'msg':'done'},200
+        else:
+            return {'msg':'error'},422
+
+class FollowArticle(Resource):
+    @jwt_required 
+    def post(self,board,article_number):
+        email = get_jwt_identity() #這行如果驗證錯誤自己會reject
+        u = UserModel()
+        if u.follow_article(email,board,article_number) == True:
+            return {'msg':'done'},200
+        else:
+            return {'msg':'error'},422
+
+class GetFollowingArticle(Resource):
+    @jwt_required
+    def get(self):
+        email = get_jwt_identity()
+        u = UserModel()
+        return u.get_following_article(email)
+
+class GetFollowingBoard(Resource):
+    @jwt_required
+    def get(self):
+        email = get_jwt_identity()
+        u = UserModel()
+        return u.get_following_board(email)
 
 class Login(Resource):
     def post(self):
