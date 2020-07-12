@@ -32,10 +32,8 @@ from flask_jwt_extended import (
 def create_app():
     app = Flask(__name__)
     app.config['JWT_SECRET_KEY'] = 'super-secret'
-    """
     app.config['JWT_TOKEN_LOCATION'] = ['headers', 'query_string']
     app.config['PROPAGATE_EXCEPTIONS'] = True
-    """
     app.json_encoder = CustomJSONEncoder
     api = Api(app)
     app.config.from_object(SQLAlchemy_config)
