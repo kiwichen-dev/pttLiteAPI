@@ -65,7 +65,7 @@ class Index(Resource):
                 del d_result['last_update']
                 del d_result['push_count']
                 distinct_board_name_top.append(d_result)
-        
+
         query_result = cursor.fetchall()
         cursor.close()
         package = dict()
@@ -74,7 +74,6 @@ class Index(Resource):
             d['board_url'] = '/board/' + d['board_name']
         package['hotboard'] = disscussRank[0:8]
         package['image'] = '/index.jpg'
-        print(board_to_list)
         return jsonify(package)
 
 class Board(Resource):

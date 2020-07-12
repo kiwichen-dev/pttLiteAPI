@@ -6,7 +6,7 @@ WORKDIR /restfulAPI
 
 ADD . /restfulAPI
 
-RUN cat /etc/os-release
+# RUN cat /etc/os-release
 
 RUN pip install -r requirements.txt
 
