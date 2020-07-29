@@ -4,10 +4,10 @@ services:
 
   restfulapi:
     build: ./restfulAPI
-    container_name: restfulAPI
+    container_name: restfulAPI(Dev)
     restart: always
     environment:
-      - APP_NAME=PTTLiteAPI
+      - APP_NAME=PTTLiteAPI(Dev)
     expose:
       - 8080
 
@@ -17,3 +17,4 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
