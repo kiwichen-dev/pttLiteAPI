@@ -13,7 +13,6 @@ RUN apt-get update \
     && apt-get install python3 -y --assume-yes apt-utils \
     && apt-get install python3-pip -y --assume-yes apt-utils \
     && apt-get install ipython3 -y --assume-yes apt-utils \
-    && pip3 install -r requirements.txt \
-    && apt-get install certbot python-certbot-nginx -y 
+    && pip3 install -r requirements.txt
 
 CMD ["uwsgi", "uwsgi.ini"]
