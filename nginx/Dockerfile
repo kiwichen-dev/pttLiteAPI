@@ -2,10 +2,10 @@
 
 FROM ubuntu:18.04
 
-RUN apt-get update -y \
+RUN apt-get update \
     && apt-get install nginx \
     && rm /etc/nginx/conf.d/default.conf
-    
+
 COPY nginx.conf /etc/nginx/conf.d/
 
 EXPOSE 443
