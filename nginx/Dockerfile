@@ -8,4 +8,6 @@ RUN apt-get update -y \
 
 COPY nginx.conf /etc/nginx/conf.d/
 
-EXPOSE 443
+EXPOSE 80 443
+
+CMD service nginx start
