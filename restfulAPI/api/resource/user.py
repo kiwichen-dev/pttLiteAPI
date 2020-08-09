@@ -23,14 +23,14 @@ def min_length_str(min_length):
 class User(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument(
+        'email', type=str, required=True, help='required email'
+    )
+    parser.add_argument(
         'password', type=min_length_str(8), required=True,
         help='password error'
     )
-    parser.add_argument(
-        'email', type=str, required=True, help='required email'
-    )
 
-    def get(self, username):
+    def get(self):
         db = connection()
         cursor = db.cursor()
         sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
@@ -39,30 +39,6 @@ class User(Resource):
             return {'message':'user already exist'}
         else:
             return {'message': 'user not found'},204
-
-    def post(self, username):
-        data = User.parser.parse_args()
-        email = data['email']
-        password = data['password']
-        db = connection()
-        cursor = db.cursor()
-        sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
-        cursor.execute(sql)
-        if cursor.fetchone():
-            cursor.close()
-            return {'message': 'user already exist'}
-        else:
-            """
-            u = UserModel(username,password)
-            password_hash = u.set_password()
-            """
-            u = UserModel()
-            password_hash = u.set_password(password)
-            sql = "INSERT INTO user(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
-            cursor.execute(sql)
-            db.commit()
-            cursor.close()
-            return {'message':'user has been created'}, 201
     
     @jwt_required
     def booking(self):
@@ -134,6 +110,33 @@ class Login(Resource):
             return {
                 'access_token': access_token
             }, 200
+
+class Register(Resource):
+    def post(self):
+        user = User()
+        user.parser.add_argument(
+            'username', type=str, required=True, help='required username'
+        )
+        data = user.parser.parse_args()
+        email = data['email']
+        username = data['username']
+        password = data['password']
+        db = connection()
+        cursor = db.cursor()
+        sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
+        cursor.execute(sql)
+        if cursor.fetchone():
+            cursor.close()
+            return {'message': 'user already exist'}
+        else:
+            usermodel = UserModel()
+            password_hash = usermodel.set_password(password)
+            sql = "INSERT INTO user(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
+            cursor.execute(sql)
+            db.commit()
+            cursor.close()
+            return {'message':'user has been created'}, 201
+
 
 class Protected(Resource):
     @jwt_required

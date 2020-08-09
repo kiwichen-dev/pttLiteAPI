@@ -18,7 +18,7 @@ def connection():
     pool.get_conn()
     return pool.get_conn()
 
-from api.resource.user import User,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticle,GetFollowingBoard
+from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticle,GetFollowingBoard
 from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList
 from datetime import date
 from api.config import SQLAlchemy_config
@@ -45,7 +45,7 @@ def create_app():
     api.add_resource(All_board)
     api.add_resource(Board,'/board/<string:board_name>')
     api.add_resource(Article,'/<string:board>/<string:article_number>')
-    api.add_resource(User,'/user/<string:username>')
+    api.add_resource(Register,'/register')
     api.add_resource(BoardToList,'/boardtolist')
     api.add_resource(Login,'/login')
     api.add_resource(Protected,'/protected')
