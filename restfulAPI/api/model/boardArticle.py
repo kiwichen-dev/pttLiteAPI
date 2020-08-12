@@ -1,7 +1,7 @@
 from datetime import datetime
 import time
 from flask import current_app
-from api import db
+from api import db,connection
 
 class Category(db.Model):
     __tablename__ = 'category'
@@ -62,3 +62,24 @@ class Pushcount():
         self.__good = list()
         self.__neutral = list()
         self.__bad = list()
+
+class LinkCheck():
+    def check_Disscussion(self,board,article):
+        sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article)
+        pymysql = connection()
+        cursor = pymysql.cursor()
+        cursor.execute(sql)
+        if cursor.fetchone():
+            return True
+        else:
+            return False
+
+    def check_Reply(self,board,article,article_disscuss_id):
+        sql = "SELECT * FROM article_disscuss WHERE board_name = '%s' AND article_number = '%s' AND id ='%s'" % (board,article,article_disscuss_id)
+        pymysql = connection()
+        cursor = pymysql.cursor()
+        cursor.execute(sql)
+        if cursor.fetchone():
+            return True
+        else:
+            return False

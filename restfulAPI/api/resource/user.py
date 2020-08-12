@@ -3,6 +3,7 @@ from flask import request, current_app
 from api import connection
 import json
 from api.model.user import UserModel
+from api.model.boardArticle import LinkCheck
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
@@ -64,60 +65,54 @@ class User(Resource):
             return {'message': "user not found"}, 204    
     """
 
-class FollowBoard(Resource):
+class FollowBoard(UserModel,Resource):
     @jwt_required 
     def post(self,board):
         email = get_jwt_identity() #這行如果驗證錯誤自己會reject
-        u = UserModel()
-        if u.follow_board(email,board) == True:
+        if self.follow_board(email,board) == True:
             return {'msg':'done'},200
         else:
             return {'msg':'error'},422
 
-class FollowArticle(Resource):
+class FollowArticle(UserModel,Resource):
     @jwt_required 
     def post(self,board,article_number):
         email = get_jwt_identity() #這行如果驗證錯誤自己會reject
-        u = UserModel()
-        if u.follow_article(email,board,article_number) == True:
+        if self.follow_article(email,board,article_number) == True:
             return {'msg':'done'},200
         else:
             return {'msg':'error'},422
 
-class GetFollowingArticle(Resource):
+class GetFollowingArticle(UserModel,Resource):
     @jwt_required
     def get(self):
         email = get_jwt_identity()
-        u = UserModel()
-        return u.get_following_article(email)
+        return self.get_following_article(email)
 
-class GetFollowingBoard(Resource):
+class GetFollowingBoard(UserModel,Resource):
     @jwt_required
     def get(self):
         email = get_jwt_identity()
-        u = UserModel()
-        return u.get_following_board(email)
+        return self.get_following_board(email)
 
-class Login(Resource):
+class Login(UserModel,Resource):
     def post(self):
         data = User.parser.parse_args()
         email = data['email']
         password = data['password']
-        u = UserModel()
-        u.check_password(email,password)
-        if u.check_password(email,password) == True:
+        self.check_password(email,password)
+        if self.check_password(email,password) == True:
             access_token = create_access_token(identity=email)
             return {
                 'access_token': access_token
             }, 200
 
-class Register(Resource):
+class Register(User,UserModel,Resource):
     def post(self):
-        user = User()
-        user.parser.add_argument(
+        self.parser.add_argument(
             'username', type=str, required=True, help='required username'
         )
-        data = user.parser.parse_args()
+        data = self.parser.parse_args()
         email = data['email']
         username = data['username']
         password = data['password']
@@ -129,8 +124,7 @@ class Register(Resource):
             cursor.close()
             return {'message': 'user already exist'}
         else:
-            usermodel = UserModel()
-            password_hash = usermodel.set_password(password)
+            password_hash = self.set_password(password)
             sql = "INSERT INTO user(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
             cursor.execute(sql)
             db.commit()
@@ -145,3 +139,77 @@ class Protected(Resource):
         return {
             'identity': identity
         }, 200
+
+class Disscuss(Resource,UserModel,LinkCheck):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            'article_number', type=str, required=True, help='required article_number'
+        )
+        parser.add_argument(
+            'respone_type', type=str, required=True, help='required respone_type'
+        )
+        parser.add_argument(
+            'respone_user_id', type=str, required=True, help='required respone_user_id'
+        )
+        parser.add_argument(
+            'disscuss', type=str, required=True, help='required disscuss'
+        )
+        parser.add_argument(
+            'respone_user_ip', type=str, required=True, help='required respone_user_ip'
+        )
+        parser.add_argument(
+            'board_name', type=str, required=True, help='required board_name'
+        )
+        data = parser.parse_args()
+        article_number = data['article_number']
+        respone_type = data['respone_type']
+        respone_user_id = data['respone_user_id']
+        disscuss = data['disscuss']
+        respone_user_ip = data['respone_user_ip']
+        board_name = data['board_name']
+        
+        if self.check_Disscussion(board_name,article_number):
+            self.disscuss(article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name)
+            return {'message':'disscussion submit'}, 201
+        else:
+            return {'message':'Can not find the article'}, 400
+
+class Reply(Resource,UserModel,LinkCheck):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            'article_disscuss_id', type=str, required=True, help='required article_disscuss_id'
+        )
+        parser.add_argument(
+            'article_number', type=str, required=True, help='required article_number'
+        )
+        parser.add_argument(
+            'respone_type', type=str, required=True, help='required respone_type'
+        )
+        parser.add_argument(
+            'respone_user_id', type=str, required=True, help='required respone_user_id'
+        )   
+        parser.add_argument(
+            'disscuss', type=str, required=True, help='required disscuss'
+        )
+        parser.add_argument(
+            'respone_user_ip', type=str, required=True, help='required respone_user_ip'
+        )
+        parser.add_argument(
+            'board_name', type=str, required=True, help='required board_name'
+        )
+        data = parser.parse_args()
+        article_disscuss_id = data['article_disscuss_id']
+        article_number = data['article_number']
+        respone_type = data['respone_type']
+        respone_user_id = data['respone_user_id']
+        disscuss = data['disscuss']
+        respone_user_ip = data['respone_user_ip']
+        board_name = data['board_name']
+
+        if self.check_Reply(board_name,article_number,article_disscuss_id):
+            self.reply(article_disscuss_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name)
+            return {'message':'reply submit'}, 201
+        else:
+            return {'message':'Can not find the article'}, 400

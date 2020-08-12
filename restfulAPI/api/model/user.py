@@ -78,3 +78,56 @@ class UserModel():
         cursor = db.cursor()
         cursor.execute(sql)
         return cursor.fetchall()
+    
+    def disscuss(self,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name):
+        sql = \
+        "INSERT INTO article_disscuss(\
+            from_pttLite, \
+            article_number,\
+            respone_type,\
+            respone_user_id,\
+            disscuss,\
+            respone_user_ip,\
+            create_time,\
+            last_update,\
+            board_name\
+            )\
+        VALUES(true,'%s','%s','%s','%s','%s',NOW(),NOW(),'%s')" % (
+            article_number,
+            respone_type,
+            respone_user_id,
+            disscuss,
+            respone_user_ip,
+            board_name
+        )
+        db = connection()
+        cursor = db.cursor()
+        cursor.execute(sql)
+        db.commit()
+
+    def reply(self,article_disscuss_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name):
+        sql = \
+        "INSERT INTO reply_from_pttLite(\
+            article_disscuss_id,\
+            article_number,\
+            respone_type,\
+            respone_user_id,\
+            disscuss,\
+            respone_user_ip,\
+            create_time,\
+            last_update,\
+            board_name\
+            )\
+        VALUES(%s,'%s','%s','%s','%s','%s',now(),now(),'%s')" % (
+            article_disscuss_id,
+            article_number,
+            respone_type,
+            respone_user_id,
+            disscuss,
+            respone_user_ip,
+            board_name
+        )
+        db = connection()
+        cursor = db.cursor()
+        cursor.execute(sql)
+        db.commit()

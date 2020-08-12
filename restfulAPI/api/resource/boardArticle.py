@@ -130,9 +130,13 @@ class Article(Resource):
             cursor.execute(sql)
             unlike = cursor.fetchone()
 
-            sql = "SELECT respone_type,respone_user_id,disscuss,respone_user_ip,create_time FROM article_disscuss WHERE article_number ='%s'" % (article_number)
+            sql = "SELECT id,from_pttLite,respone_type,respone_user_id,disscuss,respone_user_ip,create_time FROM article_disscuss WHERE article_number ='%s'" % (article_number)
             cursor.execute(sql)
             article_disscuss = cursor.fetchall()
+
+            sql = "SELECT id,article_disscuss_id,respone_type,respone_user_id,disscuss,respone_user_ip,create_time,last_update FROM reply_from_pttLite WHERE article_number ='%s'" % (article_number)
+            cursor.execute(sql)
+            reply_from_pttLite = cursor.fetchall()
             cursor.close()
 
             article = dict()
@@ -146,6 +150,7 @@ class Article(Resource):
             article['push_count'] = article_content['push_count']
             article['create_time'] = str(article_content['create_time'])
             article['disscuss'] = article_disscuss
+            article['reply_from_pttLite'] = reply_from_pttLite 
             return jsonify(article)
 
         else:
