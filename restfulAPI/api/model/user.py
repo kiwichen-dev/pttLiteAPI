@@ -105,10 +105,10 @@ class UserModel():
         cursor.execute(sql)
         db.commit()
 
-    def reply(self,article_disscuss_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name):
+    def reply(self,article_disscussion_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name):
         sql = \
         "INSERT INTO reply_from_pttLite(\
-            article_disscuss_id,\
+            article_disscussion_id,\
             article_number,\
             respone_type,\
             respone_user_id,\
@@ -119,7 +119,7 @@ class UserModel():
             board_name\
             )\
         VALUES(%s,'%s','%s','%s','%s','%s',now(),now(),'%s')" % (
-            article_disscuss_id,
+            article_disscussion_id,
             article_number,
             respone_type,
             respone_user_id,

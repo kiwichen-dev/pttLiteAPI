@@ -74,8 +74,8 @@ class LinkCheck():
         else:
             return False
 
-    def check_Reply(self,board,article,article_disscuss_id):
-        sql = "SELECT * FROM article_disscuss WHERE board_name = '%s' AND article_number = '%s' AND id ='%s'" % (board,article,article_disscuss_id)
+    def check_Reply(self,board,article,disscussion_id):
+        sql = "SELECT * FROM article_disscuss WHERE board_name = '%s' AND article_number = '%s' AND disscussion_id ='%s'" % (board,article,disscussion_id)
         pymysql = connection()
         cursor = pymysql.cursor()
         cursor.execute(sql)

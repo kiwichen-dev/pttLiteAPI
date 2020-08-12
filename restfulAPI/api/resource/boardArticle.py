@@ -183,3 +183,47 @@ class BoardToList(Resource):
             board_to_list[str(d['board_name'])] = str(i)
             i += 1
         return jsonify(board_to_list)
+
+class Article_Left_Join(Resource):
+    def get(self,board,article_number):
+        db = connection()
+        cursor = db.cursor()
+        sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
+        cursor.execute(sql)
+        if cursor.fetchone():
+            sql = "SELECT * FROM article WHERE article_number = '%s'" % (article_number)
+            cursor.execute(sql)
+            article_content = cursor.fetchone()
+
+            sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='推 '" % (article_number)
+            cursor.execute(sql)
+            like = cursor.fetchone()
+            
+            sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='→ '" % (article_number)
+            cursor.execute(sql)
+            neutral = cursor.fetchone()
+
+            sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='噓 '" % (article_number)
+            cursor.execute(sql)
+            unlike = cursor.fetchone()
+
+            sql = "SELECT * FROM article_disscuss LEFT JOIN reply_from_pttLite ON article_disscuss.disscussion.id  = reply_from_pttLite.article_disscussion_id WHERE article_disscuss.article_number = '%s'" % (article_number)
+            cursor.execute(sql)
+            reply_from_pttLite = cursor.fetchall()
+            cursor.close()
+
+            article = dict()
+            article['article_url'] = '/' + article_content['board_name'] + '/' + article_content['article_number']
+            article['board_name'] = article_content['board_name']
+            article['article_number'] = article_content['article_number'] 
+            article['title'] = article_content['title']
+            article['author'] = article_content['author']
+            article['author_ip'] = article_content['author_ip'].split('(')[-1].replace(')','')
+            article['body'] = article_content['body']
+            article['push_count'] = article_content['push_count']
+            article['create_time'] = str(article_content['create_time'])
+            article['disscuss'] = reply_from_pttLite 
+            return jsonify(article)
+
+        else:
+            return {'message':'article not found'},404

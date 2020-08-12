@@ -168,7 +168,7 @@ class Disscuss(Resource,UserModel,LinkCheck):
         disscuss = data['disscuss']
         respone_user_ip = data['respone_user_ip']
         board_name = data['board_name']
-        
+
         if self.check_Disscussion(board_name,article_number):
             self.disscuss(article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name)
             return {'message':'disscussion submit'}, 201
@@ -179,7 +179,7 @@ class Reply(Resource,UserModel,LinkCheck):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
-            'article_disscuss_id', type=str, required=True, help='required article_disscuss_id'
+            'article_disscussion_id', type=str, required=True, help='required article_disscussion_id'
         )
         parser.add_argument(
             'article_number', type=str, required=True, help='required article_number'
@@ -200,7 +200,7 @@ class Reply(Resource,UserModel,LinkCheck):
             'board_name', type=str, required=True, help='required board_name'
         )
         data = parser.parse_args()
-        article_disscuss_id = data['article_disscuss_id']
+        article_disscussion_id = data['article_disscussion_id']
         article_number = data['article_number']
         respone_type = data['respone_type']
         respone_user_id = data['respone_user_id']
@@ -208,8 +208,8 @@ class Reply(Resource,UserModel,LinkCheck):
         respone_user_ip = data['respone_user_ip']
         board_name = data['board_name']
 
-        if self.check_Reply(board_name,article_number,article_disscuss_id):
-            self.reply(article_disscuss_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name)
+        if self.check_Reply(board_name,article_number,article_disscussion_id):
+            self.reply(article_disscussion_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name)
             return {'message':'reply submit'}, 201
         else:
             return {'message':'Can not find the article'}, 400
