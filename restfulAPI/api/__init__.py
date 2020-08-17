@@ -6,7 +6,7 @@ from flask_restful import Api
 from api.model.JSONEncoder import CustomJSONEncoder
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
-    get_jwt_identity
+    get_jwt_identity,decode_token
 )
 from flask_cors import CORS
 from flask_mail import Mail
@@ -39,7 +39,7 @@ class Database():
         pool.get_conn()
         return pool.get_conn()
 
-from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticle,GetFollowingBoard,Disscuss,Reply,ForgotPassword
+from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticle,GetFollowingBoard,Disscuss,Reply,ForgotPassword,ResetPassword
 from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,Article_Left_Join
 
 class App(Database):
@@ -60,4 +60,5 @@ class App(Database):
         self.api.add_resource(Disscuss,'/disscuss')
         self.api.add_resource(Reply,'/reply')
         self.api.add_resource(ForgotPassword,'/forgotpassword')
+        self.api.add_resource(ResetPassword,'/resetpassword/<token>')
         return self.app

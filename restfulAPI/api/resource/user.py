@@ -52,12 +52,19 @@ class Login(UserModel,Resource):
         data = parser.parse_args()
         email = data['email']
         password = data['password']
-        self.check_password(email,password)
-        if self.check_password(email,password) == True:
+        if self.vaildate_password(email,password) == True:
             access_token = create_access_token(identity=email)
             return {
                 'access_token': access_token
             }, 200
+
+class Protected(Resource):
+    @jwt_required
+    def get(self):
+        identity = get_jwt_identity()
+        return {
+            'identity': identity
+        }, 200
 
 class Register(UserModel,Resource):
     def post(self):
@@ -83,7 +90,7 @@ class Register(UserModel,Resource):
         cursor.execute(sql)
         if cursor.fetchone():
             cursor.close()
-            return {'message': 'user already exist'}
+            return {'message': 'user already exist'},401
         else:
             password_hash = self.set_password(password)
             sql = "INSERT INTO user(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
@@ -103,15 +110,14 @@ class ForgotPassword(UserModel,Resource):
         if self.forgot_password(email):
             return {'message':'susscess'}, 201
         else:
-            return {'message':'user not found'}, 201
+            return {'message':'user not found'}, 401
 
-class Protected(Resource):
-    @jwt_required
-    def get(self):
-        identity = get_jwt_identity()
-        return {
-            'identity': identity
-        }, 200
+class ResetPassword(UserModel,Resource):
+    def get(self,token):
+        if self.reset_password(token):
+            return 201
+        else:
+            return 401
 
 class Disscuss(Resource,UserModel,LinkCheck):
     def post(self):

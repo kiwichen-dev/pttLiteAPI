@@ -6,7 +6,7 @@ from api import Database
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
-    get_jwt_identity
+    get_jwt_identity,decode_token
 )
 from flask_mail import Message
 from flask_restful import Resource, reqparse
@@ -63,7 +63,7 @@ class UserModel(Database):
     def set_password(self,password):
         return generate_password_hash(password)
 
-    def check_password(self,email,password):
+    def vaildate_password(self,email,password):
         sql = "SELECT pw_hash FROM user WHERE email = '%s'" % (email)
         db = self.connection()
         cursor = db.cursor()
@@ -154,6 +154,7 @@ class UserModel(Database):
         cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
+        cursor.close()
 
     def reply(self,article_disscussion_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name):
         sql = \
@@ -181,6 +182,7 @@ class UserModel(Database):
         cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
+        cursor.close()
     
     def forgot_password(self,email):
         db = self.connection()
@@ -199,6 +201,43 @@ class UserModel(Database):
             msg.body = msg_body
             msg.html = msg_html
             self.mail.send(msg)
+            cursor.close()
             return True
         else:
+            cursor.close()
+            return False
+    
+    def vaildate_token(self,token):
+        email = decode_token(token)['identity']
+        db = self.connection()
+        cursor = db.cursor()
+        sql = "SELECT * FROM user WHERE email = '%s' " % (email)
+        cursor.execute(sql)
+        if cursor.fetchone():
+            cursor.close()
+            return True,email
+        else:
+            cursor.close()
+            return False
+    
+    def reset_password(self,token):
+        if self.vaildate_token(token)[0]:
+            parser = self.parser
+            parser.add_argument(
+                'password', type = min_length_str(8), required=True,
+                help='password require and length >= 8'
+            )
+            data = parser.parse_args()
+            email = self.vaildate_token(token)[1]
+            password = data['password']
+            password_hash = self.set_password(password)
+            db = self.connection()
+            cursor = db.cursor()
+            sql = "UPDATE user SET pw = '%s', pw_hash = '%s' WHERE email = '%s'" % (password,password_hash,email)
+            cursor.execute(sql)
+            db.commit()
+            cursor.close()
+            return True
+        else:
+            cursor.close()
             return False

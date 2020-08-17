@@ -17,7 +17,7 @@ class PymysqlConfig():
     port = int(3306)
 
 class Config():
-    JWT_SECRET_KEY = 'super-secret'
+    JWT_SECRET_KEY = 'fk6hcej67az355szr'
     JWT_TOKEN_LOCATION = ['headers', 'query_string']
     PROPAGATE_EXCEPTIONS = True
 
