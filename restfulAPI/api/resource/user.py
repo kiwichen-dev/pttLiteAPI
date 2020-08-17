@@ -40,8 +40,8 @@ class GetFollowingBoard(UserModel,Resource):
         return self.get_following_board(email)
 
 class Login(UserModel,Resource):
-    def post(self):
-        parser = self.parser
+    def get(self):
+        parser = reqparse.RequestParser()
         parser.add_argument(
             'email', type=str, required=True, help='required email'
         )
@@ -52,7 +52,7 @@ class Login(UserModel,Resource):
         data = parser.parse_args()
         email = data['email']
         password = data['password']
-        if self.vaildate_password(email,password) == True:
+        if self.vaildate_password(email,password):
             access_token = create_access_token(identity=email)
             return {
                 'access_token': access_token
@@ -68,7 +68,7 @@ class Protected(Resource):
 
 class Register(UserModel,Resource):
     def post(self):
-        parser = self.parser
+        parser = reqparse.RequestParser()
         parser.add_argument(
             'email', type=str, required=True, help='required email'
         )
@@ -100,7 +100,7 @@ class Register(UserModel,Resource):
             return {'message':'user has been created'}, 201
 
 class ForgotPassword(UserModel,Resource):
-    def post(self):
+    def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'email', type=str, required=True, help='required email'

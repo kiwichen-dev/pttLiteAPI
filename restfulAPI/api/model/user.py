@@ -24,8 +24,6 @@ def min_length_str(min_length):
     return validate
 
 class UserModel(Database):
-    def __init__(self):
-        self.parser = reqparse.RequestParser()
     """
     def get(self):
         db = self.connection()
@@ -190,11 +188,12 @@ class UserModel(Database):
         sql = "SELECT * FROM user WHERE email = '%s'" % (email)
         cursor.execute(sql)
         if cursor.fetchone():
+            access_token = create_access_token(identity=email)
             msg_title = 'PTT Lite 重設密碼'
             msg_sender = 'kiwichen.dev@gmail.com'
             msg_recipients = [str(email)]
-            msg_body = '密碼重設連結'
-            msg_html = '<h1>密碼重設連結</h1>'
+            msg_body = "密碼重設連結:{}".format("https://pttlite.cloudns.asia/resetpassword/" + str(access_token) )
+            msg_html = '<a href="{}" >點我重設密碼</a>'.format("https://pttlite.cloudns.asia/resetpassword/" + str(access_token) )
             msg = Message(msg_title,
                         sender=msg_sender,
                         recipients=msg_recipients)
@@ -222,7 +221,7 @@ class UserModel(Database):
     
     def reset_password(self,token):
         if self.vaildate_token(token)[0]:
-            parser = self.parser
+            parser = reqparse.RequestParser()
             parser.add_argument(
                 'password', type = min_length_str(8), required=True,
                 help='password require and length >= 8'
