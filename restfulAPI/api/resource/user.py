@@ -1,69 +1,13 @@
 from flask_restful import Resource, reqparse
 from flask import request, current_app
-from api import connection
+from api import Database
 import json
-from api.model.user import UserModel
+from api.model.user import UserModel,min_length_str
 from api.model.boardArticle import LinkCheck
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
-
-def min_length_str(min_length):
-    def validate(s):
-        if s is None:
-            raise Exception('password required')
-        if not isinstance(s, (int, str)):
-            raise Exception('password format error')
-        s = str(s)
-        if len(s) >= min_length:
-            return s
-        raise Exception("String must be at least %i characters long" % min_length)
-    return validate
-
-class User(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument(
-        'email', type=str, required=True, help='required email'
-    )
-    parser.add_argument(
-        'password', type=min_length_str(8), required=True,
-        help='password error'
-    )
-
-    def get(self):
-        db = connection()
-        cursor = db.cursor()
-        sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
-        cursor.execute(sql)
-        if cursor.fetchone():
-            return {'message':'user already exist'}
-        else:
-            return {'message': 'user not found'},204
-    
-    @jwt_required
-    def booking(self):
-        return {"message":"token is working"},201
-    
-    """
-    def delete(self, username):
-        user = UserModel.get_by_username(username)
-        if user:
-            user.delete()
-            return {'message': 'user deleted'}
-        else:
-            return {'message': 'user not found'}, 204
-    
-    def put(self, username):
-        user = UserModel.get_by_username(username)
-        if user:
-            data = User.parser.parse_args()
-            user.password_hash = data['password']
-            user.update()
-            return user.as_dict()
-        else:
-            return {'message': "user not found"}, 204    
-    """
 
 class FollowBoard(UserModel,Resource):
     @jwt_required 
@@ -97,7 +41,15 @@ class GetFollowingBoard(UserModel,Resource):
 
 class Login(UserModel,Resource):
     def post(self):
-        data = User.parser.parse_args()
+        parser = self.parser
+        parser.add_argument(
+            'email', type=str, required=True, help='required email'
+        )
+        parser.add_argument(
+            'password', type = min_length_str(8), required=True,
+            help='password error'
+        )
+        data = parser.parse_args()
         email = data['email']
         password = data['password']
         self.check_password(email,password)
@@ -107,16 +59,25 @@ class Login(UserModel,Resource):
                 'access_token': access_token
             }, 200
 
-class Register(User,UserModel,Resource):
+class Register(UserModel,Resource):
     def post(self):
-        self.parser.add_argument(
-            'username', type=str, required=True, help='required username'
+        parser = self.parser
+        parser.add_argument(
+            'email', type=str, required=True, help='required email'
         )
-        data = self.parser.parse_args()
+        parser.add_argument(
+            'username', type = min_length_str(6), required=True,
+            help='username require'
+        )
+        parser.add_argument(
+            'password', type = min_length_str(8), required=True,
+            help='password error'
+        )
+        data = parser.parse_args()
         email = data['email']
         username = data['username']
         password = data['password']
-        db = connection()
+        db = self.connection()
         cursor = db.cursor()
         sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
         cursor.execute(sql)
@@ -131,6 +92,18 @@ class Register(User,UserModel,Resource):
             cursor.close()
             return {'message':'user has been created'}, 201
 
+class ForgotPassword(UserModel,Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            'email', type=str, required=True, help='required email'
+        )
+        data = parser.parse_args()
+        email = data['email']
+        if self.forgot_password(email):
+            return {'message':'susscess'}, 201
+        else:
+            return {'message':'user not found'}, 201
 
 class Protected(Resource):
     @jwt_required

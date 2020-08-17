@@ -15,3 +15,16 @@ class PymysqlConfig():
     db = 'PTTLite'
     charset = 'utf8'
     port = int(3306)
+
+class Config():
+    JWT_SECRET_KEY = 'super-secret'
+    JWT_TOKEN_LOCATION = ['headers', 'query_string']
+    PROPAGATE_EXCEPTIONS = True
+
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = int(465)
+    MAIL_USE_SSL = True
+    MAIL_DEFAULT_SENDER = ('admin', 'kiwichen.dev@gmail.com')
+    MAIL_MAX_EMAILS =int(10)
+    MAIL_USERNAME = 'kiwichen.dev@gmail.com'
+    MAIL_PASSWORD = 'VNCofnhM7VRfp6EutE8wxocWCqxp28yKmGLZV3Q5eV9xdBjKhGDAPn26n2TEWQ2f'

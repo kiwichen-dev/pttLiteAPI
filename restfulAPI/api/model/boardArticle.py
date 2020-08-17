@@ -1,8 +1,9 @@
 from datetime import datetime
 import time
 from flask import current_app
-from api import db,connection
+from api import Database
 
+"""
 class Category(db.Model):
     __tablename__ = 'category'
     board_link = db.Column(db.String(150), primary_key=True)
@@ -32,7 +33,6 @@ class Article(db.Model):
         return 'article_url={}, title={}, author={}, author_ip, body={}, push_count={}, create_time={}, last_update={},board_link={}'.format(
                 self.article_url, self.title, self.author, self.author_ip, self.body, self.push_count, self.create_time, self.last_update, self.board_link)
 
-"""
 class Article_content(db.Model):
     __tablename__ = 'article_content'
     article_url = db.Column(db.String(300),primary_key=True)
@@ -42,7 +42,7 @@ class Article_content(db.Model):
     def __repr__(self):
         return 'article_url={}, article_body={}, author_ip={}, last_update={}'.format(
                 self.article_url, self.article_body, self.author_ip, self.last_update)
-"""
+
 
 class Article_disscuss(db.Model):
     __tablename__ = 'article_disscuss'
@@ -56,6 +56,7 @@ class Article_disscuss(db.Model):
     def __repr__(self):
         return 'article_url={}, disscuss_respon={}, disscuss_user_id={}, disscuss={}, respone_user_ip={}, create_time={}, last_update={}'.format(
                 self.article_url, self.disscuss_respon, self.disscuss_user_id, self.disscuss, self.respone_user_ip, self.create_time, self.last_update)
+"""
 
 class Pushcount():
     def __init__(self):
@@ -63,10 +64,10 @@ class Pushcount():
         self.__neutral = list()
         self.__bad = list()
 
-class LinkCheck():
+class LinkCheck(Database):
     def check_Disscussion(self,board,article):
         sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article)
-        pymysql = connection()
+        pymysql = self.connection()
         cursor = pymysql.cursor()
         cursor.execute(sql)
         if cursor.fetchone():
@@ -76,7 +77,7 @@ class LinkCheck():
 
     def check_Reply(self,board,article,disscussion_id):
         sql = "SELECT * FROM article_disscuss WHERE board_name = '%s' AND article_number = '%s' AND disscussion_id ='%s'" % (board,article,disscussion_id)
-        pymysql = connection()
+        pymysql = self.connection()
         cursor = pymysql.cursor()
         cursor.execute(sql)
         if cursor.fetchone():

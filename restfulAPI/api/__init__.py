@@ -1,59 +1,63 @@
 from flask import Flask
-from flask_restful import Resource,Api
 from pymysqlpool.pool import Pool
-from api.config import PymysqlConfig
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
-def connection():
-    pool = Pool(
-                host=PymysqlConfig.host,
-                port=PymysqlConfig.port, 
-                user=PymysqlConfig.user, 
-                password=PymysqlConfig.password, 
-                db=PymysqlConfig.db
-                )
-    pool.init()
-    pool.get_conn()
-    return pool.get_conn()
-
-from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticle,GetFollowingBoard,Disscuss,Reply
-from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,Article_Left_Join
-from datetime import date
-from api.config import SQLAlchemy_config
+from api.config import PymysqlConfig,Config
+#from flask_sqlalchemy import SQLAlchemy
+from flask_restful import Api
 from api.model.JSONEncoder import CustomJSONEncoder
-from api.model.user import UserModel
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
 from flask_cors import CORS
+from flask_mail import Mail
 
-def create_app():
-    app = Flask(__name__)
-    CORS(app)
-    app.config['JWT_SECRET_KEY'] = 'super-secret'
-    app.config['JWT_TOKEN_LOCATION'] = ['headers', 'query_string']
-    app.config['PROPAGATE_EXCEPTIONS'] = True
-    app.json_encoder = CustomJSONEncoder
-    api = Api(app)
-    app.config.from_object(SQLAlchemy_config)
-    db.init_app(app)
-    jwt = JWTManager(app)
-    api.add_resource(Index,'/')
-    api.add_resource(All_board)
-    api.add_resource(Board,'/board/<string:board_name>')
-    api.add_resource(Article,'/<string:board>/<string:article_number>')
-    api.add_resource(Article_Left_Join,'/left_join/<string:board>/<string:article_number>')
-    api.add_resource(Register,'/register')
-    api.add_resource(BoardToList,'/boardtolist')
-    api.add_resource(Login,'/login')
-    api.add_resource(Protected,'/protected')
-    api.add_resource(FollowBoard,'/follow/<string:board>')
-    api.add_resource(GetFollowingBoard,'/following_board')
-    api.add_resource(FollowArticle,'/follow/<string:board>/<string:article_number>')
-    api.add_resource(GetFollowingArticle,'/following_article')
-    api.add_resource(Disscuss,'/disscuss')
-    api.add_resource(Reply,'/reply')
-    return app
+class Database():
+    #def sqlalchemy(self):
+    #    return SQLAlchemy()
+
+    def __init__(self):
+        #self.db = SQLAlchemy()
+        self.app = Flask(__name__)
+        self.app.json_encoder = CustomJSONEncoder
+        self.app.config.from_object(Config)
+        CORS(self.app)
+        self.mail = Mail(self.app)
+        self.mail.init_app(self.app)
+        self.api = Api(self.app)
+        #db.init_app(self.app)
+        self.jwt = JWTManager(self.app)
+
+    def connection(self):
+        pool = Pool(
+                    host=PymysqlConfig.host,
+                    port=PymysqlConfig.port, 
+                    user=PymysqlConfig.user, 
+                    password=PymysqlConfig.password, 
+                    db=PymysqlConfig.db
+                    )
+        pool.init()
+        pool.get_conn()
+        return pool.get_conn()
+
+from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticle,GetFollowingBoard,Disscuss,Reply,ForgotPassword
+from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,Article_Left_Join
+
+class App(Database):
+    def create_app(self):
+        self.api.add_resource(Index,'/')
+        self.api.add_resource(All_board)
+        self.api.add_resource(Board,'/board/<string:board_name>')
+        self.api.add_resource(Article,'/<string:board>/<string:article_number>')
+        self.api.add_resource(Article_Left_Join,'/left_join/<string:board>/<string:article_number>')
+        self.api.add_resource(Register,'/register')
+        self.api.add_resource(BoardToList,'/boardtolist')
+        self.api.add_resource(Login,'/login')
+        self.api.add_resource(Protected,'/protected')
+        self.api.add_resource(FollowBoard,'/follow/<string:board>')
+        self.api.add_resource(GetFollowingBoard,'/following_board')
+        self.api.add_resource(FollowArticle,'/follow/<string:board>/<string:article_number>')
+        self.api.add_resource(GetFollowingArticle,'/following_article')
+        self.api.add_resource(Disscuss,'/disscuss')
+        self.api.add_resource(Reply,'/reply')
+        self.api.add_resource(ForgotPassword,'/forgotpassword')
+        return self.app

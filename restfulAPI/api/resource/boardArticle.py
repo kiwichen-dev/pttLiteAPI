@@ -1,12 +1,12 @@
 from flask import jsonify, request, current_app
-from api import connection
-from api.model.boardArticle import Category,Article,Article_disscuss
+from api import Database
+#from api.model.boardArticle import Category,Article,Article_disscuss
 from flask_restful import Resource, reqparse
 import re
 
-class Index(Resource):
+class Index(Database,Resource):
     def get(self):
-        db = connection()
+        db = self.connection()
         cursor = db.cursor()
         sql = 'SELECT board_name, board_class FROM category'
         cursor.execute(sql)
@@ -76,9 +76,9 @@ class Index(Resource):
         package['image'] = '/index.jpg'
         return jsonify(package)
 
-class Board(Resource):
+class Board(Database,Resource):
     def get(self,board_name):
-        db = connection()
+        db = self.connection()
         cursor = db.cursor()
         sql = "SELECT * FROM article WHERE board_name = '%s'" % (board_name)
         cursor.execute(sql)
@@ -91,9 +91,9 @@ class Board(Resource):
         else:
             return {'message':'board not found'},404
 
-class All_board(Resource):
+class All_board(Database,Resource):
     def get(self):
-        db = connection()
+        db = self.connection()
         cursor = db.cursor()
         cursor.execute('SELECT * FROM category')
         category = cursor.fetchall()
@@ -102,9 +102,9 @@ class All_board(Resource):
         package['all_board'] = category
         return jsonify(package)
 
-class Article(Resource):
+class Article(Database,Resource):
     def get(self,board,article_number):
-        db = connection()
+        db = self.connection()
         cursor = db.cursor()
         sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
         cursor.execute(sql)
@@ -151,6 +151,7 @@ class Article(Resource):
             article['create_time'] = str(article_content['create_time'])
             article['disscuss'] = article_disscuss
             article['reply_from_pttLite'] = reply_from_pttLite 
+
             return jsonify(article)
 
         else:
@@ -160,7 +161,7 @@ def search():
     cursor = db.cursor()
     if request.method == 'POST':
         keyWord = request.form.get('keyWord')
-        db = connection()
+        db = self.connection()
         cursor = db.cursor()
         sql = "SELECT * FROM article WHERE title LIKE '%s'" % ('%'+ keyWord +'%')
         cursor.execute(sql)
@@ -169,9 +170,9 @@ def search():
         cursor.close()
         return jsonify('search.html',searchingResult=searchingResult)
 
-class BoardToList(Resource):
+class BoardToList(Database,Resource):
     def get(self):
-        db = connection()
+        db = self.connection()
         cursor = db.cursor()
         sql = "SELECT DISTINCT board_name FROM category ORDER BY board_name ASC"
         cursor.execute(sql)
@@ -184,9 +185,9 @@ class BoardToList(Resource):
             i += 1
         return jsonify(board_to_list)
 
-class Article_Left_Join(Resource):
+class Article_Left_Join(Database,Resource):
     def get(self,board,article_number):
-        db = connection()
+        db = self.connection()
         cursor = db.cursor()
         sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
         cursor.execute(sql)
