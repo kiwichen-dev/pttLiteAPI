@@ -8,6 +8,7 @@ class Index(Database,Resource):
     def get(self):
         db = self.connection()
         cursor = db.cursor()
+        """
         sql = 'SELECT board_name, board_class FROM category'
         cursor.execute(sql)
         board_class = cursor.fetchall()
@@ -22,25 +23,26 @@ class Index(Database,Resource):
             insert['dissussCount'] = str(dissussCount['COUNT(*)'])
             disscussRank.append(insert)
         disscussRank.sort(key=lambda x:int(x['dissussCount']),reverse=True)
-
+        """
         sql = "SELECT DISTINCT board_name FROM category"
         cursor.execute(sql)
         distinct_board_name = cursor.fetchall()
 
         distinct_board_name_top = list()
         board_to_list = dict()
-        for d in distinct_board_name:
+        for board_name in distinct_board_name:
             #sql = "select * from(select * from article order by push_count desc) as s group by board_name"
-            sql = "SELECT * FROM article WHERE board_name = '%s' ORDER BY push_count DESC LIMIT 1" % (d['board_name'])
+            sql = "SELECT * FROM article WHERE board_name = '%s' ORDER BY disscussion_count DESC LIMIT 1" % (board_name['board_name'])
             cursor.execute(sql)
             d_result = cursor.fetchone()
+            distinct_board_name_top.append(d_result)
+            """
             if d_result == None:
                 continue
             else:
-                """
-                ip = d_result['author_ip']
-                p1 = re.compile(r'[(](.*?)[)]', re.S)
-                """
+
+                #ip = d_result['author_ip']
+                #p1 = re.compile(r'[(](.*?)[)]', re.S)
                 d_result['author_ip'] = d_result['author_ip'].split('(')[-1].replace(')','')
                 d_result['body'] = d_result['body'][0:101]
                 d_result['article_url'] = '/' + d_result['board_name'] + '/' + d_result['article_number']
@@ -55,26 +57,37 @@ class Index(Database,Resource):
 
                 sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='噓 '" % (d_result['article_number'])
                 cursor.execute(sql)
-                unlike = cursor.fetchone()
+                diskike = cursor.fetchone()
 
                 d_result['like'] = like["COUNT(*)"]
                 d_result['respone'] = neutral["COUNT(*)"]
-                d_result['unlike'] = unlike["COUNT(*)"]
+                d_result['diskike'] = diskike["COUNT(*)"]
 
                 del d_result['article_number']
                 del d_result['last_update']
                 del d_result['push_count']
-                distinct_board_name_top.append(d_result)
 
-        query_result = cursor.fetchall()
-        cursor.close()
+                distinct_board_name_top.append(d_result)
+            """
         package = dict()
         package['article'] = distinct_board_name_top
+
+        sql = "SELECT * FROM top_8_like_count_boards ORDER BY like_count DESC LIMIT 8"
+        cursor.execute(sql)
+        top_8_like_count_boards = cursor.fetchall()
+        package['top_8_like_count_boards'] = top_8_like_count_boards
+        """
         for d in disscussRank[0:8]:
             d['board_url'] = '/board/' + d['board_name']
         package['hotboard'] = disscussRank[0:8]
+        """
         package['image'] = '/index.jpg'
+        cursor.close()
         return jsonify(package)
+
+class News(Database,Resource):
+    def get(self):
+        pass
 
 class Board(Database,Resource):
     def get(self,board_name):
@@ -128,7 +141,7 @@ class Article(Database,Resource):
 
             sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='噓 '" % (article_number)
             cursor.execute(sql)
-            unlike = cursor.fetchone()
+            diskike = cursor.fetchone()
 
             sql = "SELECT disscussion_id,from_pttLite,respone_type,respone_user_id,disscuss,respone_user_ip,create_time FROM article_disscuss WHERE article_number ='%s'" % (article_number)
             cursor.execute(sql)
@@ -206,7 +219,7 @@ class Article_Left_Join(Database,Resource):
 
             sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='噓 '" % (article_number)
             cursor.execute(sql)
-            unlike = cursor.fetchone()
+            diskike = cursor.fetchone()
 
             sql = "SELECT * FROM article_disscuss LEFT JOIN reply_from_pttLite ON article_disscuss.disscussion.id  = reply_from_pttLite.article_disscussion_id WHERE article_disscuss.article_number = '%s'" % (article_number)
             cursor.execute(sql)

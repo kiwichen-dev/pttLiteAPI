@@ -2,7 +2,7 @@ import os
 from datetime import timedelta
 
 class SQLAlchemy_config():
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL","mysql+pymysql://flask:quQ351dTx@1.34.134.247:3306/TEST")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL","mysql+pymysql://flask:quQ351dTx@1.34.134.247:31478/PTTLite")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_POOL_RECYCLE = 30
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev')
@@ -14,7 +14,7 @@ class PymysqlConfig():
     password = 'quQ351dTx'
     db = 'PTTLite'
     charset = 'utf8'
-    port = int(3306)
+    port = int(31478)
 
 class Config():
     JWT_SECRET_KEY = 'fk6hcej67az355szr'

@@ -6,7 +6,7 @@ from flask_restful import Api
 from api.model.JSONEncoder import CustomJSONEncoder
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
-    get_jwt_identity,decode_token
+    get_jwt_identity
 )
 from flask_cors import CORS
 from flask_mail import Mail
@@ -44,7 +44,7 @@ from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,
 
 class App(Database):
     def create_app(self):
-        self.api.add_resource(Index,'/')
+        self.api.add_resource(Index,'/index')
         self.api.add_resource(All_board)
         self.api.add_resource(Board,'/board/<string:board_name>')
         self.api.add_resource(Article,'/<string:board>/<string:article_number>')
