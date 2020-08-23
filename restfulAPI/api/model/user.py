@@ -103,29 +103,34 @@ class UserModel(Database):
         db.commit()
         return True
 
-    def follow_article(self,email,board,article_number):
-        bookmark = board + article_number
-        sql = "UPDATE users SET bookmark ='%s' WHERE email = '%s'" % (bookmark,email)
+    def follow_article(self,email,board_name,article_number):
+        article_url = "/" + board_name + "/" + article_number
+        sql = "INSERT INTO following_articles(id,article_url,board_name,article_number,create_time) VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
-        res = board + article + "已追蹤"
+        cursor.close()
         return True
 
-    def get_following_board(self,email):
-        sql = "SELECT bookmark FROM users WHERE email = '%s'" % (email)
+    def get_following_boards(self,email):
+        sql = "SELECT board_name,create_time FROM following_boards WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
-        return cursor.fetchall()
+        res = cursor.fetchall()[0]
+        cursor.close()
+        return res
 
-    def get_following_article(self,email):
-        sql = "SELECT bookmark FROM users WHERE email = '%s'" % (email)
+    def get_following_articles(self,email):
+        sql = "SELECT article_url,create_time FROM following_articles WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
+        print(email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
-        return cursor.fetchall()
+        res = cursor.fetchall()
+        cursor.close()
+        return res
     
     def disscuss(self,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name):
         sql = \

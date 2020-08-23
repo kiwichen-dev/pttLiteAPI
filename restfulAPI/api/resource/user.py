@@ -1,5 +1,5 @@
 from flask_restful import Resource, reqparse
-from flask import request, current_app
+from flask import request, current_app, jsonify
 from api import Database
 import json
 from api.model.user import UserModel,min_length_str
@@ -14,30 +14,34 @@ class FollowBoard(UserModel,Resource):
     def post(self,board):
         email = get_jwt_identity()
         if self.follow_board(email,board) == True:
-            return {'msg':'done'},200
+            return {'msg':'done'},201
         else:
-            return {'msg':'error'},422
+            return {'msg':'error'},401
 
 class FollowArticle(UserModel,Resource):
     @jwt_required 
-    def post(self,board,article_number):
+    def post(self,board_name,article_number):
         email = get_jwt_identity()
-        if self.follow_article(email,board,article_number) == True:
-            return {'msg':'done'},200
+        if self.follow_article(email,board_name,article_number):
+            return {'msg':'sucess'},201
         else:
-            return {'msg':'error'},422
+            return {'msg':'error'},401
 
-class GetFollowingArticle(UserModel,Resource):
+class GetFollowingArticles(UserModel,Resource):
     @jwt_required
     def get(self):
         email = get_jwt_identity()
-        return self.get_following_article(email)
+        followe_articles = dict()
+        followe_articles['following_articles'] = self.get_following_articles(email)
+        return jsonify(followe_articles)
 
-class GetFollowingBoard(UserModel,Resource):
+class GetFollowingBoards(UserModel,Resource):
     @jwt_required
     def get(self):
         email = get_jwt_identity()
-        return self.get_following_board(email)
+        followe_boards = dict()
+        followe_boards['following_articles'] = self.get_following_boards(email)
+        return jsonify(followe_boards)
 
 class Login(UserModel,Resource):
     def get(self):
@@ -73,7 +77,7 @@ class Register(UserModel,Resource):
             'email', type=str, required=True, help='required email'
         )
         parser.add_argument(
-            'username', type = min_length_str(6), required=True,
+            'username', type = min_length_str(4), required=True,
             help='username require'
         )
         parser.add_argument(
