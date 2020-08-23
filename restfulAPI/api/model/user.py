@@ -28,7 +28,7 @@ class UserModel(Database):
     def get(self):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
+        sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
         cursor.execute(sql)
         if cursor.fetchone():
             return {'message':'user already exist'}
@@ -62,7 +62,7 @@ class UserModel(Database):
         return generate_password_hash(password)
 
     def vaildate_password(self,email,password):
-        sql = "SELECT pw_hash FROM user WHERE email = '%s'" % (email)
+        sql = "SELECT pw_hash FROM users WHERE email = '%s'" % (email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -71,7 +71,7 @@ class UserModel(Database):
 
     @staticmethod
     def get_by_username(username):
-        sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
+        sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -81,7 +81,7 @@ class UserModel(Database):
 
     @staticmethod
     def get_by_id(username):
-        sql = "SELECT nickname FROM user WHERE nickname = '%s'" % (username)
+        sql = "SELECT nickname FROM users WHERE nickname = '%s'" % (username)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -96,7 +96,7 @@ class UserModel(Database):
         return cursor.fetchone()
 
     def follow_board(self,email,board):
-        sql = "UPDATE user SET bookmark ='%s' WHERE email = '%s'" % (board,email)
+        sql = "UPDATE users SET bookmark ='%s' WHERE email = '%s'" % (board,email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -105,7 +105,7 @@ class UserModel(Database):
 
     def follow_article(self,email,board,article_number):
         bookmark = board + article_number
-        sql = "UPDATE user SET bookmark ='%s' WHERE email = '%s'" % (bookmark,email)
+        sql = "UPDATE users SET bookmark ='%s' WHERE email = '%s'" % (bookmark,email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -114,14 +114,14 @@ class UserModel(Database):
         return True
 
     def get_following_board(self,email):
-        sql = "SELECT bookmark FROM user WHERE email = '%s'" % (email)
+        sql = "SELECT bookmark FROM users WHERE email = '%s'" % (email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
         return cursor.fetchall()
 
     def get_following_article(self,email):
-        sql = "SELECT bookmark FROM user WHERE email = '%s'" % (email)
+        sql = "SELECT bookmark FROM users WHERE email = '%s'" % (email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -185,7 +185,7 @@ class UserModel(Database):
     def forgot_password(self,email):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM user WHERE email = '%s'" % (email)
+        sql = "SELECT * FROM users WHERE email = '%s'" % (email)
         cursor.execute(sql)
         if cursor.fetchone():
             access_token = create_access_token(identity=email)
@@ -210,7 +210,7 @@ class UserModel(Database):
         email = decode_token(token)['identity']
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM user WHERE email = '%s' " % (email)
+        sql = "SELECT * FROM users WHERE email = '%s' " % (email)
         cursor.execute(sql)
         if cursor.fetchone():
             cursor.close()
@@ -232,7 +232,7 @@ class UserModel(Database):
             password_hash = self.set_password(password)
             db = self.connection()
             cursor = db.cursor()
-            sql = "UPDATE user SET pw = '%s', pw_hash = '%s' WHERE email = '%s'" % (password,password_hash,email)
+            sql = "UPDATE users SET pw = '%s', pw_hash = '%s' WHERE email = '%s'" % (password,password_hash,email)
             cursor.execute(sql)
             db.commit()
             cursor.close()

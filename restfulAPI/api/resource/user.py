@@ -12,7 +12,7 @@ from flask_jwt_extended import (
 class FollowBoard(UserModel,Resource):
     @jwt_required 
     def post(self,board):
-        email = get_jwt_identity() #這行如果驗證錯誤自己會reject
+        email = get_jwt_identity()
         if self.follow_board(email,board) == True:
             return {'msg':'done'},200
         else:
@@ -21,7 +21,7 @@ class FollowBoard(UserModel,Resource):
 class FollowArticle(UserModel,Resource):
     @jwt_required 
     def post(self,board,article_number):
-        email = get_jwt_identity() #這行如果驗證錯誤自己會reject
+        email = get_jwt_identity()
         if self.follow_article(email,board,article_number) == True:
             return {'msg':'done'},200
         else:
@@ -86,14 +86,14 @@ class Register(UserModel,Resource):
         password = data['password']
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM user WHERE nickname = '%s'" % (username)
+        sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
         cursor.execute(sql)
         if cursor.fetchone():
             cursor.close()
             return {'message': 'user already exist'},401
         else:
             password_hash = self.set_password(password)
-            sql = "INSERT INTO user(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
+            sql = "INSERT INTO users(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
             cursor.execute(sql)
             db.commit()
             cursor.close()
