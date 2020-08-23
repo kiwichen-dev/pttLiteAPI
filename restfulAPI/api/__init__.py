@@ -53,7 +53,7 @@ class App(Database):
         self.api.add_resource(BoardToList,'/boardtolist')
         self.api.add_resource(Login,'/login')
         self.api.add_resource(Protected,'/protected')
-        self.api.add_resource(FollowBoard,'/follow/<string:board>')
+        self.api.add_resource(FollowBoard,'/follow/<string:board_name>')
         self.api.add_resource(GetFollowingBoards,'/following_boards')
         self.api.add_resource(FollowArticle,'/follow/<string:board_name>/<string:article_number>')
         self.api.add_resource(GetFollowingArticles,'/following_articles')

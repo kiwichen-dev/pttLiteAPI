@@ -95,8 +95,8 @@ class UserModel(Database):
         cursor.execute(sql)
         return cursor.fetchone()
 
-    def follow_board(self,email,board):
-        sql = "UPDATE users SET bookmark ='%s' WHERE email = '%s'" % (board,email)
+    def follow_board(self,email,board_name):
+        sql = "INSERT INTO following_boards(id,board_name,create_time) VALUES( (SELECT id FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)

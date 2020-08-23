@@ -11,10 +11,10 @@ from flask_jwt_extended import (
 
 class FollowBoard(UserModel,Resource):
     @jwt_required 
-    def post(self,board):
+    def post(self,board_name):
         email = get_jwt_identity()
-        if self.follow_board(email,board) == True:
-            return {'msg':'done'},201
+        if self.follow_board(email,board_name):
+            return {'msg':'sucess'},201
         else:
             return {'msg':'error'},401
 
