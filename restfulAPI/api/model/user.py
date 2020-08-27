@@ -62,7 +62,7 @@ class UserModel(Database):
         return generate_password_hash(password)
 
     def vaildate_password(self,email,password):
-        sql = "SELECT pw_hash FROM users WHERE email = '%s'" % (email)
+        sql = "SELECT pw_hash FROM users WHERE email = '{}'".format(email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -71,7 +71,7 @@ class UserModel(Database):
 
     @staticmethod
     def get_by_username(username):
-        sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
+        sql = "SELECT * FROM users WHERE nickname = '{}'".format(username)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -81,7 +81,7 @@ class UserModel(Database):
 
     @staticmethod
     def get_by_id(username):
-        sql = "SELECT nickname FROM users WHERE nickname = '%s'" % (username)
+        sql = "SELECT nickname FROM users WHERE nickname = '{}'".format(username)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -197,12 +197,12 @@ class UserModel(Database):
             msg_title = 'PTT Lite 重設密碼'
             msg_sender = 'kiwichen.dev@gmail.com'
             msg_recipients = [str(email)]
-            msg_body = "密碼重設連結:{}".format("https://pttlite.cloudns.asia/resetpassword/" + str(access_token) )
-            msg_html = '<a href="{}" >點我重設密碼</a>'.format("https://pttlite.cloudns.asia/resetpassword/" + str(access_token) )
+            #msg_body = "密碼重設連結:{}".format("https://pttlite.cloudns.asia/resetpassword/" + str(access_token) )
+            msg_html = '<a href="{}" >點我重設密碼</a>'.format("https://pttlite.ddns.net/resetpassword/" + str(access_token) )
             msg = Message(msg_title,
                         sender=msg_sender,
                         recipients=msg_recipients)
-            msg.body = msg_body
+            #msg.body = msg_body
             msg.html = msg_html
             self.mail.send(msg)
             cursor.close()
