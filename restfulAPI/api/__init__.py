@@ -10,8 +10,11 @@ from flask_jwt_extended import (
 )
 from flask_cors import CORS
 from flask_mail import Mail
+"""
+from flask_uploads import UploadSet, IMAGES, configure_uploads
+"""
 
-class Database():
+class InintAPP():
     #def sqlalchemy(self):
     #    return SQLAlchemy()
 
@@ -26,6 +29,10 @@ class Database():
         self.api = Api(self.app)
         #db.init_app(self.app)
         self.jwt = JWTManager(self.app)
+        """
+        self.upload = UploadSet(name='def', extensions=IMAGES)
+        self.configure_uploads(app, self.upload)
+        """
 
     def connection(self):
         pool = Pool(
@@ -39,10 +46,10 @@ class Database():
         pool.get_conn()
         return pool.get_conn()
 
-from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticles,GetFollowingBoards,Disscuss,Reply,ForgotPassword,ResetPassword
+from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticles,GetFollowingBoards,Disscuss,Reply,ForgotPassword,ResetPassword,Refresh_token,UploadImg
 from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,Article_Left_Join
 
-class App(Database):
+class App(InintAPP):
     def create_app(self):
         self.api.add_resource(Index,'/index')
         self.api.add_resource(All_board)
@@ -61,4 +68,6 @@ class App(Database):
         self.api.add_resource(Reply,'/reply')
         self.api.add_resource(ForgotPassword,'/forgotpassword')
         self.api.add_resource(ResetPassword,'/resetpassword/<token>')
+        self.api.add_resource(Refresh_token,'/refresh_toekn')
+        self.api.add_resource(UploadImg,'/upload_img')      
         return self.app

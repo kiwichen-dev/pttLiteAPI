@@ -1,10 +1,10 @@
 from flask import jsonify, request, current_app
-from api import Database
+from api import InintAPP
 #from api.model.boardArticle import Category,Article,Article_disscuss
 from flask_restful import Resource, reqparse
 import re
 
-class Index(Database,Resource):
+class Index(InintAPP,Resource):
     def get(self):
         db = self.connection()
         cursor = db.cursor()
@@ -31,11 +31,11 @@ class Index(Database,Resource):
         cursor.close()
         return jsonify(package)
 
-class News(Database,Resource):
+class News(InintAPP,Resource):
     def get(self):
         pass
 
-class Board(Database,Resource):
+class Board(InintAPP,Resource):
     def get(self,board_name):
         db = self.connection()
         cursor = db.cursor()
@@ -50,7 +50,7 @@ class Board(Database,Resource):
         else:
             return {'message':'board not found'},404
 
-class All_board(Database,Resource):
+class All_board(InintAPP,Resource):
     def get(self):
         db = self.connection()
         cursor = db.cursor()
@@ -61,7 +61,7 @@ class All_board(Database,Resource):
         package['all_board'] = category
         return jsonify(package)
 
-class Article(Database,Resource):
+class Article(InintAPP,Resource):
     def get(self,board,article_number):
         db = self.connection()
         cursor = db.cursor()
@@ -114,7 +114,7 @@ def search():
         cursor.close()
         return jsonify('search.html',searchingResult=searchingResult)
 
-class BoardToList(Database,Resource):
+class BoardToList(InintAPP,Resource):
     def get(self):
         db = self.connection()
         cursor = db.cursor()
@@ -129,7 +129,7 @@ class BoardToList(Database,Resource):
             i += 1
         return jsonify(board_to_list)
 
-class Article_Left_Join(Database,Resource):
+class Article_Left_Join(InintAPP,Resource):
     def get(self,board,article_number):
         db = self.connection()
         cursor = db.cursor()

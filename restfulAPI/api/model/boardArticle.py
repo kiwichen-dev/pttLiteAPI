@@ -1,7 +1,7 @@
 from datetime import datetime
 import time
 from flask import current_app
-from api import Database
+from api import InintAPP
 
 """
 class Category(db.Model):
@@ -64,7 +64,7 @@ class Pushcount():
         self.__neutral = list()
         self.__bad = list()
 
-class LinkCheck(Database):
+class LinkVaildate(InintAPP):
     def check_Disscussion(self,board,article):
         sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article)
         pymysql = self.connection()

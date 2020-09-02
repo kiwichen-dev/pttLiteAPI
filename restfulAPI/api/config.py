@@ -28,3 +28,8 @@ class Config():
     MAIL_MAX_EMAILS =int(10)
     MAIL_USERNAME = 'kiwichen.dev@gmail.com'
     MAIL_PASSWORD = 'VNCofnhM7VRfp6EutE8wxocWCqxp28yKmGLZV3Q5eV9xdBjKhGDAPn26n2TEWQ2f'
+
+    SECRET_KEY = 'development'
+    UPLOAD_FOLDER = './images'
+    ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'gif'])
+    # MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB

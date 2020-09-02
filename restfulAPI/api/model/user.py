@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import jwt
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
-from api import Database
+from api import InintAPP
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
@@ -23,7 +23,7 @@ def min_length_str(min_length):
         raise Exception("String must be at least %i characters long" % min_length)
     return validate
 
-class UserModel(Database):
+class UserModel(InintAPP):
     """
     def get(self):
         db = self.connection()
@@ -245,3 +245,9 @@ class UserModel(Database):
         else:
             cursor.close()
             return False
+
+    def refresh_token(self,email):
+        token = {
+            'access_token': create_access_token(identity=email)
+        }
+        return token

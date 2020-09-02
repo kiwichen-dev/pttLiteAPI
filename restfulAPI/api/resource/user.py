@@ -1,13 +1,15 @@
 from flask_restful import Resource, reqparse
 from flask import request, current_app, jsonify
-from api import Database
+from api import InintAPP
 import json
 from api.model.user import UserModel,min_length_str
-from api.model.boardArticle import LinkCheck
+from api.model.boardArticle import LinkVaildate
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
-    get_jwt_identity
+    create_refresh_token,
+    get_jwt_identity,jwt_refresh_token_required
 )
+from werkzeug.datastructures import FileStorage
 
 class FollowBoard(UserModel,Resource):
     @jwt_required 
@@ -51,15 +53,15 @@ class Login(UserModel,Resource):
         )
         parser.add_argument(
             'password', type = min_length_str(8), required=True,
-            help='password error'
+            help='require password'
         )
         data = parser.parse_args()
         email = data['email']
         password = data['password']
         if self.vaildate_password(email,password):
-            access_token = create_access_token(identity=email)
             return {
-                'access_token': access_token
+                'access_token': create_access_token(identity=email),
+                'refresh_token': create_refresh_token(identity=email)
             }, 200
 
 class Protected(Resource):
@@ -123,7 +125,7 @@ class ResetPassword(UserModel,Resource):
         else:
             return 401
 
-class Disscuss(Resource,UserModel,LinkCheck):
+class Disscuss(Resource,UserModel,LinkVaildate):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -158,7 +160,7 @@ class Disscuss(Resource,UserModel,LinkCheck):
         else:
             return {'message':'Can not find the article'}, 400
 
-class Reply(Resource,UserModel,LinkCheck):
+class Reply(Resource,UserModel,LinkVaildate):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -196,3 +198,26 @@ class Reply(Resource,UserModel,LinkCheck):
             return {'message':'reply submit'}, 201
         else:
             return {'message':'Can not find the article'}, 400
+
+class Refresh_token(Resource,UserModel):
+    @jwt_refresh_token_required
+    def get(self):
+        email = get_jwt_identity()
+        token = self.refresh_token(email)
+        if token:
+            return token,200
+        else:
+            return {'msg':'invaild token'},401
+
+
+class UploadImg(Resource):
+    def __init__(self):
+        # 创建一个新的解析器
+        self.parser = reqparse.RequestParser()
+        # 增加imgFile参数，用来解析前端传来的图片。
+        self.parser.add_argument('imgFile', required=True, type=FileStorage,location='files',help="imgFile is wrong.")
+
+    def post(self):
+        img_file = self.parser.parse_args().get('imgFile')
+        img_file.save(img_file.filename)
+        return 'ok', 201
