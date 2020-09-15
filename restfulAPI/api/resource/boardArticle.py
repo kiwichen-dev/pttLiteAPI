@@ -95,8 +95,11 @@ class Article(InintAPP,Resource):
 
             article['disscuss'] = article_disscuss
             article['reply_from_pttLite'] = reply_from_pttLite
+
+            article_page = dict()
+            article_page['article_page'] = article
             cursor.close()
-            return jsonify(article)
+            return jsonify(article_page)
 
         else:
             return {'message':'article not found'},404

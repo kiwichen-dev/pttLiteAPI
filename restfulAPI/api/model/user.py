@@ -67,7 +67,10 @@ class UserModel(InintAPP):
         cursor = db.cursor()
         cursor.execute(sql)
         password_hash = cursor.fetchone()['pw_hash']
-        return check_password_hash(password_hash,password)
+        if password_hash:
+            return check_password_hash(password_hash,password)
+        else:
+            return False
 
     @staticmethod
     def get_by_username(username):

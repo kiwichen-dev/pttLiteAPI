@@ -1,6 +1,6 @@
-FROM ubuntu:18.04
+# FROM ubuntu:18.04
 
-# FROM python:3.7.7-stretch
+FROM python:3.7.7-stretch
 
 WORKDIR /restfulAPI
 
@@ -8,10 +8,10 @@ ADD . /restfulAPI
 
 # RUN cat /etc/os-release
 
-RUN apt-get update \
-    && apt-get install python3 -y --assume-yes apt-utils \
-    && apt-get install python3-pip -y --assume-yes apt-utils \
-    && apt-get install ipython3 -y --assume-yes apt-utils \
-    && pip3 install -r requirements.txt
+# RUN apt-get update \
+#     && apt-get install python3 -y --assume-yes apt-utils \
+#     && apt-get install python3-pip -y --assume-yes apt-utils \
+#     && apt-get install ipython3 -y --assume-yes apt-utils \
+#     && pip3 install -r requirements.txt
 
 CMD ["uwsgi", "uwsgi.ini"]
