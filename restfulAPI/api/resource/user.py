@@ -92,7 +92,10 @@ class Login(UserModel,Resource):
             db.commit()
             db.close()
             cursor.close()
-            return {'message':'user has been created'}, 201
+            return {
+                    'access_token': create_access_token(identity=email),
+                    'refresh_token': create_refresh_token(identity=email)
+                }, 201
 
 class Protected(Resource):
     @jwt_required
