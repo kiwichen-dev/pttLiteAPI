@@ -46,7 +46,7 @@ class GetFollowingBoards(UserModel,Resource):
         return jsonify(followe_boards)
 
 class Login(UserModel,Resource):
-    def get(self):
+    def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'email', type=str, required=True, help='required email'
@@ -58,11 +58,41 @@ class Login(UserModel,Resource):
         data = parser.parse_args()
         email = data['email']
         password = data['password']
-        if self.vaildate_password(email,password):
-            return {
-                'access_token': create_access_token(identity=email),
-                'refresh_token': create_refresh_token(identity=email)
-            }, 200
+
+        if self.isUser(email):
+            if self.vaildate_password(email,password):
+                return {
+                    'access_token': create_access_token(identity=email),
+                    'refresh_token': create_refresh_token(identity=email)
+                }, 200
+            else:
+                return {'msg':'wrong of email or password '},401
+        else:
+            parser = reqparse.RequestParser()
+            parser.add_argument(
+                'email', type=str, required=True, help='required email'
+            )
+            # parser.add_argument(
+            #     'username', type = min_length_str(4), required=True,
+            #     help='username require'
+            # )
+            parser.add_argument(
+                'password', type = min_length_str(8), required=True,
+                help='password error'
+            )
+            data = parser.parse_args()
+            email = data['email']
+            # username = data['username']
+            password = data['password']
+            db = self.connection()
+            cursor = db.cursor()
+            password_hash = self.set_password(password)
+            sql = "INSERT INTO users(email,pw,pw_hash) VALUES('{}','{}','{}')".format(email,password,password_hash)
+            cursor.execute(sql)
+            db.commit()
+            db.close()
+            cursor.close()
+            return {'message':'user has been created'}, 201
 
 class Protected(Resource):
     @jwt_required

@@ -67,6 +67,8 @@ class UserModel(InintAPP):
         cursor = db.cursor()
         cursor.execute(sql)
         password_hash = cursor.fetchone()['pw_hash']
+        db.commit()
+        cursor.close()
         if password_hash:
             return check_password_hash(password_hash,password)
         else:
@@ -88,7 +90,10 @@ class UserModel(InintAPP):
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
-        return cursor.fetchone()
+        res = cursor.fetchone()
+        db.commit()
+        cursor.close()
+        return res
 
     @staticmethod
     def get_user_list(username):
@@ -96,7 +101,10 @@ class UserModel(InintAPP):
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
-        return cursor.fetchone()
+        res = cursor.fetchone()
+        db.commit()
+        cursor.close()
+        return res
 
     def follow_board(self,email,board_name):
         sql = "INSERT INTO following_boards(id,board_name,create_time) VALUES( (SELECT id FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
@@ -104,6 +112,7 @@ class UserModel(InintAPP):
         cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
+        cursor.close()
         return True
 
     def follow_article(self,email,board_name,article_number):
@@ -113,6 +122,7 @@ class UserModel(InintAPP):
         cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
+        db.close()
         cursor.close()
         return True
 
@@ -122,6 +132,7 @@ class UserModel(InintAPP):
         cursor = db.cursor()
         cursor.execute(sql)
         res = cursor.fetchall()[0]
+        db.close()
         cursor.close()
         return res
 
@@ -132,6 +143,7 @@ class UserModel(InintAPP):
         cursor = db.cursor()
         cursor.execute(sql)
         res = cursor.fetchall()
+        db.close()
         cursor.close()
         return res
     
@@ -160,6 +172,7 @@ class UserModel(InintAPP):
         cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
+        db.close()
         cursor.close()
 
     def reply(self,article_disscussion_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name):
@@ -188,6 +201,7 @@ class UserModel(InintAPP):
         cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
+        db.close()
         cursor.close()
     
     def forgot_password(self,email):
@@ -208,9 +222,11 @@ class UserModel(InintAPP):
             #msg.body = msg_body
             msg.html = msg_html
             self.mail.send(msg)
+            db.close()
             cursor.close()
             return True
         else:
+            db.close()
             cursor.close()
             return False
     
@@ -221,9 +237,11 @@ class UserModel(InintAPP):
         sql = "SELECT * FROM users WHERE email = '%s' " % (email)
         cursor.execute(sql)
         if cursor.fetchone():
+            db.close()
             cursor.close()
             return True,email
         else:
+            db.close()
             cursor.close()
             return False
     
@@ -243,9 +261,11 @@ class UserModel(InintAPP):
             sql = "UPDATE users SET pw = '%s', pw_hash = '%s' WHERE email = '%s'" % (password,password_hash,email)
             cursor.execute(sql)
             db.commit()
+            db.close()
             cursor.close()
             return True
         else:
+            db.close()
             cursor.close()
             return False
 
@@ -254,3 +274,15 @@ class UserModel(InintAPP):
             'access_token': create_access_token(identity=email)
         }
         return token
+
+    def isUser(self,email):
+        db = self.connection()
+        cursor = db.cursor()
+        sql = "SELECT * FROM users WHERE email = '{}' ".format(email)
+        cursor.execute(sql)
+        res = cursor.fetchone()
+        if res:
+            return True
+        else:
+            return False
+
