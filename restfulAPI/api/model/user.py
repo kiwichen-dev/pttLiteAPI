@@ -147,14 +147,14 @@ class UserModel(InintAPP):
         cursor.close()
         return res
     
-    def disscuss(self,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name):
+    def discuss(self,article_number,respone_type,respone_user_id,discussion,respone_user_ip,board_name):
         sql = \
-        "INSERT INTO article_disscuss(\
+        "INSERT INTO article_discussions(\
             from_pttLite, \
             article_number,\
             respone_type,\
             respone_user_id,\
-            disscuss,\
+            discussion,\
             respone_user_ip,\
             create_time,\
             last_update,\
@@ -164,7 +164,7 @@ class UserModel(InintAPP):
             article_number,
             respone_type,
             respone_user_id,
-            disscuss,
+            discussion,
             respone_user_ip,
             board_name
         )
@@ -175,25 +175,25 @@ class UserModel(InintAPP):
         db.close()
         cursor.close()
 
-    def reply(self,article_disscussion_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name):
+    def reply(self,article_discussion_id,article_number,respone_type,respone_user_id,discussion,respone_user_ip,board_name):
         sql = \
         "INSERT INTO reply_from_pttLite(\
-            article_disscussion_id,\
+            article_discussion_id,\
             article_number,\
             respone_type,\
             respone_user_id,\
-            disscuss,\
+            discussion,\
             respone_user_ip,\
             create_time,\
             last_update,\
             board_name\
             )\
         VALUES(%s,'%s','%s','%s','%s','%s',now(),now(),'%s')" % (
-            article_disscussion_id,
+            article_discussion_id,
             article_number,
             respone_type,
             respone_user_id,
-            disscuss,
+            discussion,
             respone_user_ip,
             board_name
         )

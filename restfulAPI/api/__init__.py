@@ -46,7 +46,7 @@ class InintAPP():
         pool.get_conn()
         return pool.get_conn()
 
-from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticles,GetFollowingBoards,Disscuss,Reply,ForgotPassword,ResetPassword,Refresh_token,UploadImg
+from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticles,GetFollowingBoards,Discuss,Reply,ForgotPassword,ResetPassword,Refresh_token,UploadImg
 from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,Article_Left_Join
 
 class App(InintAPP):
@@ -64,7 +64,7 @@ class App(InintAPP):
         self.api.add_resource(GetFollowingBoards,'/following_boards')
         self.api.add_resource(FollowArticle,'/follow/<string:board_name>/<string:article_number>')
         self.api.add_resource(GetFollowingArticles,'/following_articles')
-        self.api.add_resource(Disscuss,'/disscuss')
+        self.api.add_resource(Discuss,'/discuss')
         self.api.add_resource(Reply,'/reply')
         self.api.add_resource(ForgotPassword,'/forgotpassword')
         self.api.add_resource(ResetPassword,'/resetpassword/<token>')

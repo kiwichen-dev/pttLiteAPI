@@ -31,7 +31,7 @@ class FollowArticle(UserModel,Resource):
 
 class GetFollowingArticles(UserModel,Resource):
     @jwt_required
-    def get(self):
+    def post(self):
         email = get_jwt_identity()
         followe_articles = dict()
         followe_articles['following_articles'] = self.get_following_articles(email)
@@ -39,7 +39,7 @@ class GetFollowingArticles(UserModel,Resource):
 
 class GetFollowingBoards(UserModel,Resource):
     @jwt_required
-    def get(self):
+    def post(self):
         email = get_jwt_identity()
         followe_boards = dict()
         followe_boards['following_articles'] = self.get_following_boards(email)
@@ -234,7 +234,7 @@ class Reply(Resource,UserModel,LinkVaildate):
 
 class Refresh_token(Resource,UserModel):
     @jwt_refresh_token_required
-    def get(self):
+    def post(self):
         email = get_jwt_identity()
         token = self.refresh_token(email)
         if token:

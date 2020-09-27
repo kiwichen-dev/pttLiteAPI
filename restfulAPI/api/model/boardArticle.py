@@ -44,18 +44,18 @@ class Article_content(db.Model):
                 self.article_url, self.article_body, self.author_ip, self.last_update)
 
 
-class Article_disscuss(db.Model):
-    __tablename__ = 'article_disscuss'
+class Article_discuss(db.Model):
+    __tablename__ = 'article_discuss'
     article_url = db.Column(db.String(300),primary_key=True)
-    disscuss_user_id = db.Column(db.String(15))
-    disscuss = db.Column(db.String(500))
+    discuss_user_id = db.Column(db.String(15))
+    discuss = db.Column(db.String(500))
     respone_user_ip = db.Column(db.String(100))
     create_time = db.Column(db.String(15))
     last_update = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return 'article_url={}, disscuss_respon={}, disscuss_user_id={}, disscuss={}, respone_user_ip={}, create_time={}, last_update={}'.format(
-                self.article_url, self.disscuss_respon, self.disscuss_user_id, self.disscuss, self.respone_user_ip, self.create_time, self.last_update)
+        return 'article_url={}, discuss_respon={}, discuss_user_id={}, discuss={}, respone_user_ip={}, create_time={}, last_update={}'.format(
+                self.article_url, self.discuss_respon, self.discuss_user_id, self.discuss, self.respone_user_ip, self.create_time, self.last_update)
 """
 
 class Pushcount():
@@ -65,7 +65,7 @@ class Pushcount():
         self.__bad = list()
 
 class LinkVaildate(InintAPP):
-    def check_Disscussion(self,board,article):
+    def check_Discussion(self,board,article):
         sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article)
         pymysql = self.connection()
         cursor = pymysql.cursor()
@@ -75,8 +75,8 @@ class LinkVaildate(InintAPP):
         else:
             return False
 
-    def check_Reply(self,board,article,disscussion_id):
-        sql = "SELECT * FROM article_disscuss WHERE board_name = '%s' AND article_number = '%s' AND disscussion_id ='%s'" % (board,article,disscussion_id)
+    def check_Reply(self,board,article,discussion_id):
+        sql = "SELECT * FROM article_discuss WHERE board_name = '%s' AND article_number = '%s' AND discussion_id ='%s'" % (board,article,discussion_id)
         pymysql = self.connection()
         cursor = pymysql.cursor()
         cursor.execute(sql)

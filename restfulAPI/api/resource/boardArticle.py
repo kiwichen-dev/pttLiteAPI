@@ -1,6 +1,6 @@
 from flask import jsonify, request, current_app
 from api import InintAPP
-#from api.model.boardArticle import Category,Article,Article_disscuss
+#from api.model.boardArticle import Category,Article,Article_discuss
 from flask_restful import Resource, reqparse
 import re
 
@@ -15,7 +15,7 @@ class Index(InintAPP,Resource):
         board_to_list = dict()
         for board_name in distinct_board_name:
             #sql = "select * from(select * from article order by push_count desc) as s group by board_name"
-            sql = "SELECT * FROM article WHERE board_name = '{}' ORDER BY disscussion_count DESC LIMIT 1".format(board_name['board_name'])
+            sql = "SELECT * FROM article WHERE board_name = '{}' ORDER BY discussion_count DESC LIMIT 1".format(board_name['board_name'])
             cursor.execute(sql)
             d_result = cursor.fetchone()
             if d_result:
@@ -70,11 +70,11 @@ class Article(InintAPP,Resource):
         article_content = cursor.fetchall()[0]
         if article_content:
         #if article_number.startswith('M.'):
-            sql = "SELECT disscussion_id,from_pttLite,respone_type,respone_user_id,disscuss,respone_user_ip,create_time FROM article_disscuss WHERE article_number ='%s'" % (article_number)
+            sql = "SELECT discussion_id,from_pttLite,respone_type,respone_user_id,discussion,respone_user_ip,create_time FROM article_discussions WHERE article_number ='%s'" % (article_number)
             cursor.execute(sql)
-            article_disscuss = cursor.fetchall()
+            article_discussions = cursor.fetchall()
 
-            sql = "SELECT reply_id,article_disscussion_id,respone_type,respone_user_id,disscuss,respone_user_ip,create_time,last_update FROM reply_from_pttLite WHERE article_number ='%s'" % (article_number)
+            sql = "SELECT reply_id,article_discussion_id,respone_type,respone_user_id,discussion,respone_user_ip,create_time,last_update FROM reply_from_pttLite WHERE article_number ='%s'" % (article_number)
             cursor.execute(sql)
             reply_from_pttLite = cursor.fetchall()
 
@@ -86,14 +86,14 @@ class Article(InintAPP,Resource):
             article['author'] = article_content['author']
             article['ip_location'] = article_content['ip_location']
             article['body'] = article_content['body']
-            article['disscussion_count'] = article_content['disscussion_count']
+            article['discussion_count'] = article_content['discussion_count']
             article['like_count'] = article_content['like_count']
             article['neutral_count'] = article_content['neutral_count']
             article['dislike_count'] = article_content['dislike_count']
             article['create_time'] = article_content['create_time']
             article['last_update'] =article_content['last_update']
 
-            article['disscuss'] = article_disscuss
+            article['discussions'] = article_discussions
             article['reply_from_pttLite'] = reply_from_pttLite
 
             article_page = dict()
@@ -143,19 +143,19 @@ class Article_Left_Join(InintAPP,Resource):
             cursor.execute(sql)
             article_content = cursor.fetchone()
 
-            sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='推 '" % (article_number)
+            sql = "SELECT COUNT(*) FROM article_discussions WHERE article_number = '%s' and respone_type='推 '" % (article_number)
             cursor.execute(sql)
             like = cursor.fetchone()
             
-            sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='→ '" % (article_number)
+            sql = "SELECT COUNT(*) FROM article_discussions WHERE article_number = '%s' and respone_type='→ '" % (article_number)
             cursor.execute(sql)
             neutral = cursor.fetchone()
 
-            sql = "SELECT COUNT(*) FROM article_disscuss WHERE article_number = '%s' and respone_type='噓 '" % (article_number)
+            sql = "SELECT COUNT(*) FROM article_discussions WHERE article_number = '%s' and respone_type='噓 '" % (article_number)
             cursor.execute(sql)
             diskike = cursor.fetchone()
 
-            sql = "SELECT * FROM article_disscuss LEFT JOIN reply_from_pttLite ON article_disscuss.disscussion.id  = reply_from_pttLite.article_disscussion_id WHERE article_disscuss.article_number = '%s'" % (article_number)
+            sql = "SELECT * FROM article_discussions LEFT JOIN reply_from_pttLite ON article_discussions.discussion.id  = reply_from_pttLite.article_discussion_id WHERE article_discussions.article_number = '%s'" % (article_number)
             cursor.execute(sql)
             reply_from_pttLite = cursor.fetchall()
             cursor.close()
@@ -170,7 +170,7 @@ class Article_Left_Join(InintAPP,Resource):
             article['body'] = article_content['body']
             article['push_count'] = article_content['push_count']
             article['create_time'] = str(article_content['create_time'])
-            article['disscuss'] = reply_from_pttLite 
+            article['disscussions'] = reply_from_pttLite 
             return jsonify(article)
 
         else:
