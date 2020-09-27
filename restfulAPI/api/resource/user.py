@@ -158,7 +158,7 @@ class ResetPassword(UserModel,Resource):
         else:
             return 401
 
-class Disscuss(Resource,UserModel,LinkVaildate):
+class Discuss(Resource,UserModel,LinkVaildate):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -171,7 +171,7 @@ class Disscuss(Resource,UserModel,LinkVaildate):
             'respone_user_id', type=str, required=True, help='required respone_user_id'
         )
         parser.add_argument(
-            'disscuss', type=str, required=True, help='required disscuss'
+            'discuss', type=str, required=True, help='required discuss'
         )
         parser.add_argument(
             'respone_user_ip', type=str, required=True, help='required respone_user_ip'
@@ -183,13 +183,13 @@ class Disscuss(Resource,UserModel,LinkVaildate):
         article_number = data['article_number']
         respone_type = data['respone_type']
         respone_user_id = data['respone_user_id']
-        disscuss = data['disscuss']
+        discussion = data['discussion']
         respone_user_ip = data['respone_user_ip']
         board_name = data['board_name']
 
-        if self.check_Disscussion(board_name,article_number):
-            self.disscuss(article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name)
-            return {'message':'disscussion submit'}, 201
+        if self.check_Discussion(board_name,article_number):
+            self.discuss(article_number,respone_type,respone_user_id,discussion,respone_user_ip,board_name)
+            return {'message':'discussion submit'}, 201
         else:
             return {'message':'Can not find the article'}, 400
 
@@ -197,7 +197,7 @@ class Reply(Resource,UserModel,LinkVaildate):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
-            'article_disscussion_id', type=str, required=True, help='required article_disscussion_id'
+            'article_discussion_id', type=str, required=True, help='required article_discussion_id'
         )
         parser.add_argument(
             'article_number', type=str, required=True, help='required article_number'
@@ -209,7 +209,7 @@ class Reply(Resource,UserModel,LinkVaildate):
             'respone_user_id', type=str, required=True, help='required respone_user_id'
         )   
         parser.add_argument(
-            'disscuss', type=str, required=True, help='required disscuss'
+            'discuss', type=str, required=True, help='required discuss'
         )
         parser.add_argument(
             'respone_user_ip', type=str, required=True, help='required respone_user_ip'
@@ -218,16 +218,16 @@ class Reply(Resource,UserModel,LinkVaildate):
             'board_name', type=str, required=True, help='required board_name'
         )
         data = parser.parse_args()
-        article_disscussion_id = data['article_disscussion_id']
+        article_discussion_id = data['article_discussion_id']
         article_number = data['article_number']
         respone_type = data['respone_type']
         respone_user_id = data['respone_user_id']
-        disscuss = data['disscuss']
+        discussion = data['discussion']
         respone_user_ip = data['respone_user_ip']
         board_name = data['board_name']
 
-        if self.check_Reply(board_name,article_number,article_disscussion_id):
-            self.reply(article_disscussion_id,article_number,respone_type,respone_user_id,disscuss,respone_user_ip,board_name)
+        if self.check_Reply(board_name,article_number,article_discussion_id):
+            self.reply(article_discussion_id,article_number,respone_type,respone_user_id,discussion,respone_user_ip,board_name)
             return {'message':'reply submit'}, 201
         else:
             return {'message':'Can not find the article'}, 400
