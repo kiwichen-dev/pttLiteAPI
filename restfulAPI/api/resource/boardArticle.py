@@ -15,7 +15,7 @@ class Index(InintAPP,Resource):
         board_to_list = dict()
         for board_name in distinct_board_name:
             #sql = "select * from(select * from article order by push_count desc) as s group by board_name"
-            sql = "SELECT * FROM article WHERE board_name = '{}' ORDER BY discussion_count DESC LIMIT 1".format(board_name['board_name'])
+            sql = "SELECT * FROM articles WHERE board_name = '{}' ORDER BY discussion_count DESC LIMIT 1".format(board_name['board_name'])
             cursor.execute(sql)
             d_result = cursor.fetchone()
             if d_result:
@@ -39,7 +39,7 @@ class Board(InintAPP,Resource):
     def get(self,board_name):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM article WHERE board_name = '%s'" % (board_name)
+        sql = "SELECT * FROM articles WHERE board_name = '%s'" % (board_name)
         cursor.execute(sql)
         query_result = cursor.fetchall()
         if query_result:
@@ -65,7 +65,7 @@ class Article(InintAPP,Resource):
     def get(self,board,article_number):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
+        sql = "SELECT * FROM articles WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
         cursor.execute(sql)
         article_content = cursor.fetchall()[0]
         if article_content:
@@ -110,7 +110,7 @@ def search():
         keyWord = request.form.get('keyWord')
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM article WHERE title LIKE '%s'" % ('%'+ keyWord +'%')
+        sql = "SELECT * FROM articles WHERE title LIKE '%s'" % ('%'+ keyWord +'%')
         cursor.execute(sql)
         searchingResult = cursor.fetchall()
         print(searchingResult)
@@ -136,10 +136,10 @@ class Article_Left_Join(InintAPP,Resource):
     def get(self,board,article_number):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
+        sql = "SELECT * FROM articles WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
         cursor.execute(sql)
         if cursor.fetchone():
-            sql = "SELECT * FROM article WHERE article_number = '%s'" % (article_number)
+            sql = "SELECT * FROM articles WHERE article_number = '%s'" % (article_number)
             cursor.execute(sql)
             article_content = cursor.fetchone()
 
@@ -170,7 +170,7 @@ class Article_Left_Join(InintAPP,Resource):
             article['body'] = article_content['body']
             article['push_count'] = article_content['push_count']
             article['create_time'] = str(article_content['create_time'])
-            article['disscussions'] = reply_from_pttLite 
+            article['discussions'] = reply_from_pttLite 
             return jsonify(article)
 
         else:

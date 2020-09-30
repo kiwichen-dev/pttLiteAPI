@@ -66,7 +66,7 @@ class Pushcount():
 
 class LinkVaildate(InintAPP):
     def check_Discussion(self,board,article):
-        sql = "SELECT * FROM article WHERE board_name = '%s' AND article_number = '%s'" % (board,article)
+        sql = "SELECT * FROM articles WHERE board_name = '%s' AND article_number = '%s'" % (board,article)
         pymysql = self.connection()
         cursor = pymysql.cursor()
         cursor.execute(sql)
@@ -76,7 +76,7 @@ class LinkVaildate(InintAPP):
             return False
 
     def check_Reply(self,board,article,discussion_id):
-        sql = "SELECT * FROM article_discuss WHERE board_name = '%s' AND article_number = '%s' AND discussion_id ='%s'" % (board,article,discussion_id)
+        sql = "SELECT * FROM article_discussions WHERE board_name = '%s' AND article_number = '%s' AND discussion_id ='%s'" % (board,article,discussion_id)
         pymysql = self.connection()
         cursor = pymysql.cursor()
         cursor.execute(sql)
