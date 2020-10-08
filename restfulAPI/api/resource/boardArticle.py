@@ -84,27 +84,26 @@ class Article(InintAPP,Resource):
             cursor.execute(sql)
             reply_from_pttLite = cursor.fetchall()
 
-            # article = dict()
-            # article['board_name'] = article_content['board_name']
-            # article['article_number'] = article_content['article_number']
-            # article['article_url'] = article_content['article_url']
-            # article['title'] = article_content['title']
-            # article['author'] = article_content['author']
-            # article['ip_location'] = article_content['ip_location']
-            # article['body'] = article_content['body']
-            # article['discussion_count'] = article_content['discussion_count']
-            # article['like_count'] = article_content['like_count']
-            # article['neutral_count'] = article_content['neutral_count']
-            # article['dislike_count'] = article_content['dislike_count']
-            # article['create_time'] = article_content['create_time']
-            # article['last_update'] =article_content['last_update']
+            article = dict()
+            article['board_name'] = article_content['board_name']
+            article['article_number'] = article_content['article_number']
+            article['article_url'] = article_content['article_url']
+            article['title'] = article_content['title']
+            article['author'] = article_content['author']
+            article['ip_location'] = article_content['ip_location']
+            article['body'] = article_content['body']
+            article['discussion_count'] = article_content['discussion_count']
+            article['like_count'] = article_content['like_count']
+            article['neutral_count'] = article_content['neutral_count']
+            article['dislike_count'] = article_content['dislike_count']
+            article['create_time'] = article_content['create_time']
+            article['last_update'] =article_content['last_update']
 
             article['discussions'] = article_discussions
             article['reply_from_pttLite'] = reply_from_pttLite
 
             article_page = dict()
-            # article_page['article_page'] = article
-            article_page['article_page'] = article_content
+            article_page['article_page'] = article
             db.close()
             cursor.close()
             return jsonify(article_page)
