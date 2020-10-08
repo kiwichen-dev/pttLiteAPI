@@ -71,8 +71,10 @@ class LinkVaildate(InintAPP):
         cursor = pymysql.cursor()
         cursor.execute(sql)
         if cursor.fetchone():
+            cursor.close()
             return True
         else:
+            cursor.close()
             return False
 
     def check_Reply(self,board,article,discussion_id):
@@ -81,6 +83,8 @@ class LinkVaildate(InintAPP):
         cursor = pymysql.cursor()
         cursor.execute(sql)
         if cursor.fetchone():
+            cursor.close()
             return True
         else:
+            cursor.close()
             return False

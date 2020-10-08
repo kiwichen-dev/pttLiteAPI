@@ -28,6 +28,7 @@ class Index(InintAPP,Resource):
         top_8_like_count_boards = cursor.fetchall()
         package['top_8_like_count_boards'] = top_8_like_count_boards
         package['image'] = '/index.jpg'
+        db.close()
         cursor.close()
         return jsonify(package)
 
@@ -45,9 +46,12 @@ class Board(InintAPP,Resource):
         if query_result:
             package = dict()
             package['board'] = query_result
+            db.close()
             cursor.close()
             return jsonify(package)
         else:
+            db.close()
+            cursor.close()
             return {'message':'board not found'},404
 
 class All_board(InintAPP,Resource):
@@ -59,6 +63,8 @@ class All_board(InintAPP,Resource):
         cursor.close()
         package = dict()
         package['all_board'] = category
+        db.close()
+        cursor.close()
         return jsonify(package)
 
 class Article(InintAPP,Resource):
@@ -98,10 +104,13 @@ class Article(InintAPP,Resource):
 
             article_page = dict()
             article_page['article_page'] = article
+            db.close()
             cursor.close()
             return jsonify(article_page)
 
         else:
+            db.close()
+            cursor.close()
             return {'message':'article not found'},404
 
 def search():
@@ -113,7 +122,7 @@ def search():
         sql = "SELECT * FROM articles WHERE title LIKE '%s'" % ('%'+ keyWord +'%')
         cursor.execute(sql)
         searchingResult = cursor.fetchall()
-        print(searchingResult)
+        db.close()
         cursor.close()
         return jsonify('search.html',searchingResult=searchingResult)
 
@@ -124,12 +133,13 @@ class BoardToList(InintAPP,Resource):
         sql = "SELECT DISTINCT board_name FROM category ORDER BY board_name ASC"
         cursor.execute(sql)
         distinct_board_name = cursor.fetchall()
-
         board_to_list = dict()
         i = 0
         for d in distinct_board_name:
             board_to_list[str(d['board_name'])] = str(i)
             i += 1
+        db.close()
+        cursor.close()
         return jsonify(board_to_list)
 
 class Article_Left_Join(InintAPP,Resource):
@@ -158,7 +168,6 @@ class Article_Left_Join(InintAPP,Resource):
             sql = "SELECT * FROM article_discussions LEFT JOIN reply_from_pttLite ON article_discussions.discussion.id  = reply_from_pttLite.article_discussion_id WHERE article_discussions.article_number = '%s'" % (article_number)
             cursor.execute(sql)
             reply_from_pttLite = cursor.fetchall()
-            cursor.close()
 
             article = dict()
             article['article_url'] = '/' + article_content['board_name'] + '/' + article_content['article_number']
@@ -171,7 +180,11 @@ class Article_Left_Join(InintAPP,Resource):
             article['push_count'] = article_content['push_count']
             article['create_time'] = str(article_content['create_time'])
             article['discussions'] = reply_from_pttLite 
+            db.close()
+            cursor.close()
             return jsonify(article)
 
         else:
+            db.close()
+            cursor.close()
             return {'message':'article not found'},404
