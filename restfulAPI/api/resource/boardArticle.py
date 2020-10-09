@@ -37,10 +37,11 @@ class News(InintAPP,Resource):
         pass
 
 class Board(InintAPP,Resource):
-    def get(self,board_name):
+    def get(self,board_name,order_by='create_time',limit='200'):
+        print(limit)
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM articles WHERE board_name = '%s'" % (board_name)
+        sql = "SELECT * FROM articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
         cursor.execute(sql)
         query_result = cursor.fetchall()
         if query_result:

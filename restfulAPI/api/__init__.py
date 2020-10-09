@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask,jsonify
 from pymysqlpool.pool import Pool
 from api.config import PymysqlConfig,Config
 #from flask_sqlalchemy import SQLAlchemy
@@ -10,6 +10,7 @@ from flask_jwt_extended import (
 )
 from flask_cors import CORS
 from flask_mail import Mail
+from time import time
 """
 from flask_uploads import UploadSet, IMAGES, configure_uploads
 """
@@ -33,6 +34,11 @@ class InintAPP():
         self.upload = UploadSet(name='def', extensions=IMAGES)
         self.configure_uploads(app, self.upload)
         """
+        self.gossiping = None
+        self.stock = None
+        self.nba = None
+        self.baseball = None
+        self.c_chat = None
 
     def connection(self):
         pool = Pool(
@@ -45,6 +51,23 @@ class InintAPP():
         pool.init()
         pool.get_conn()
         return pool.get_conn()
+
+    # def refreshBoards(self,board_name):
+    #     db = self.connection()
+    #     cursor = db.cursor()
+    #     sql = "SELECT * FROM articles WHERE board_name = '%s'" % (board_name)
+    #     cursor.execute(sql)
+    #     query_result = cursor.fetchall()
+    #     if query_result:
+    #         package = dict()
+    #         package['board'] = query_result
+    #         db.close()
+    #         cursor.close()
+    #         return jsonify(package)
+    #     else:
+    #         db.close()
+    #         cursor.close()
+    #         return None
 
 from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticles,GetFollowingBoards,Discuss,Reply,ForgotPassword,ResetPassword,Refresh_token,UploadImg
 from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,Article_Left_Join
