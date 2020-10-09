@@ -10,6 +10,8 @@ from flask_jwt_extended import (
     get_jwt_identity,jwt_refresh_token_required
 )
 from werkzeug.datastructures import FileStorage
+import os
+import base64
 
 class FollowBoard(UserModel,Resource):
     @jwt_required 
@@ -232,7 +234,7 @@ class Reply(Resource,UserModel,LinkVaildate):
         else:
             return {'message':'Can not find the article'}, 400
 
-class Refresh_token(Resource,UserModel):
+class Refresh_token(UserModel,Resource):
     @jwt_refresh_token_required
     def post(self):
         email = get_jwt_identity()
@@ -242,15 +244,42 @@ class Refresh_token(Resource,UserModel):
         else:
             return {'msg':'invaild token'},401
 
-
-class UploadImg(Resource):
-    def __init__(self):
-        # 创建一个新的解析器
-        self.parser = reqparse.RequestParser()
-        # 增加imgFile参数，用来解析前端传来的图片。
-        self.parser.add_argument('imgFile', required=True, type=FileStorage,location='files',help="imgFile is wrong.")
-
+class UploadImg(UserModel,Resource):
+    # def __init__(self):
+    #     self.parser = reqparse.RequestParser()
+    #     self.parser.add_argument('imgFile', required=True, type=FileStorage,location='files',help="imgFile is wrong.")
+        
+    @jwt_required
     def post(self):
-        img_file = self.parser.parse_args().get('imgFile')
-        img_file.save(img_file.filename)
-        return 'ok', 201
+        email = get_jwt_identity()
+        if self.uploadFiles(email):
+            return {'msg':'sucess'}, 201
+        else:
+            return {'msg':'png,jpg,jpeg only'}, 400
+
+    #     email = get_jwt_identity()
+    #     parser = reqparse.RequestParser()
+    #     parser.add_argument('userIcon', required=True, type=FileStorage,location='files',help="imgFile is wrong.")
+    #     img_file = parser.parse_args().get('userIcon')
+    #     if self.is_allowed_file(img_file):
+    #         dirname = 'imgs/{}/icon'.format(email)
+    #         os.makedirs(dirname,mode=0o777,exist_ok=True)
+    #         save_path = os.path.join(dirname, img_file.filename)
+    #         img_file.save(save_path)
+    #         return {'msg':'sucess'}, 201
+    #     else:
+    #         return {'msg':'png,jpg,jpeg only'}, 400
+    
+    # def is_allowed_file(self,uploadFile):
+    #     if '.' in uploadFile.filename:
+    #         ext = uploadFile.filename.rsplit('.', 1)[1].lower()
+    #         if ext in {'png','jpg', 'jpeg'}:
+    #             return True
+    #     else:
+    #         return False
+
+class MemberCenter(UserModel,Resource):
+    @jwt_required
+    def post(self):
+        email = get_jwt_identity()
+        return jsonify( self.member_data(email) )

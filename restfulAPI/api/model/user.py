@@ -10,6 +10,10 @@ from flask_jwt_extended import (
 )
 from flask_mail import Message
 from flask_restful import Resource, reqparse
+from werkzeug.datastructures import FileStorage
+import os
+import base64
+from os import listdir
 
 def min_length_str(min_length):
     def validate(s):
@@ -117,7 +121,8 @@ class UserModel(InintAPP):
 
     def follow_article(self,email,board_name,article_number):
         article_url = "/" + board_name + "/" + article_number
-        sql = "INSERT INTO following_articles(id,article_url,board_name,article_number,create_time) VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
+        sql = "INSERT INTO following_articles(id,article_url,board_name,article_number,create_time)\
+             VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -160,7 +165,7 @@ class UserModel(InintAPP):
             last_update,\
             board_name\
             )\
-        VALUES(true,'%s','%s','%s','%s','%s',NOW(),NOW(),'%s')" % (
+        VALUES(true,'{},'{}','{}','{}','{}',NOW(),NOW(),'{}')".format(
             article_number,
             respone_type,
             respone_user_id,
@@ -188,7 +193,7 @@ class UserModel(InintAPP):
             last_update,\
             board_name\
             )\
-        VALUES(%s,'%s','%s','%s','%s','%s',now(),now(),'%s')" % (
+        VALUES({},'{}','{}','{}','{}','{}',now(),now(),'{}')".format(
             article_discussion_id,
             article_number,
             respone_type,
@@ -234,7 +239,7 @@ class UserModel(InintAPP):
         email = decode_token(token)['identity']
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM users WHERE email = '%s' " % (email)
+        sql = "SELECT * FROM users WHERE email = '{}' ".format(email)
         cursor.execute(sql)
         if cursor.fetchone():
             db.close()
@@ -258,7 +263,7 @@ class UserModel(InintAPP):
             password_hash = self.set_password(password)
             db = self.connection()
             cursor = db.cursor()
-            sql = "UPDATE users SET pw = '%s', pw_hash = '%s' WHERE email = '%s'" % (password,password_hash,email)
+            sql = "UPDATE users SET pw = '{}', pw_hash = '{}' WHERE email = '{}'".format(password,password_hash,email)
             cursor.execute(sql)
             db.commit()
             db.close()
@@ -278,11 +283,70 @@ class UserModel(InintAPP):
     def isUser(self,email):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM users WHERE email = '{}' ".format(email)
+        sql = "SELECT * FROM users WHERE email = '{}'".format(email)
         cursor.execute(sql)
         res = cursor.fetchone()
         if res:
             return True
         else:
             return False
+    
+    def uploadFiles(self,email):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userIcon', required=True, type=FileStorage,location='files',help="imgFile is wrong.")
+        img_file = parser.parse_args().get('userIcon')
+        is_img = self.is_allowed_file(img_file)
+        if is_img[0]:
+            dirname = 'imgs/{}/icon'.format(email)
+            os.makedirs(dirname,mode=0o777,exist_ok=True)
+            save_path = os.path.join(dirname,'icon.'+ is_img[1] )
+            img_file.save(save_path)
+            del img_file
+            return True
+        else:
+            del img_file
+            return False
 
+    def is_allowed_file(self,uploadFile):
+        if '.' in uploadFile.filename:
+            ext = uploadFile.filename.rsplit('.', 1)[1].lower()
+            if ext in {'png','jpg', 'jpeg'}:
+                del uploadFile
+                return True,ext
+        else:
+            del uploadFile
+            return False
+
+    def member_data(self,email):
+        sql = "SELECT nickname FROM users WHERE email = '{}'".format(email)
+        db = self.connection()
+        cursor = db.cursor()
+        cursor.execute(sql)
+        nickname = cursor.fetchone()['nickname']
+        db.commit()
+        icon_path = 'imgs/{}/icon/'.format(email)
+        user_data = dict()
+
+        try:
+            files = listdir(icon_path)
+        except:
+            user_data['nickname'] = nickname
+            db.close()
+            cursor.close()
+            return user_data
+
+        for f in files:
+            if ('.' in f) and ( f.rsplit('.', 1)[1].lower() in {'jpg','png','jpeg'} ):
+                icon_path = icon_path + str(f)
+                with open(r'{}'.format(icon_path), 'rb') as icon_path:
+                    user_icon = base64.b64encode(icon_path.read())
+                    user_data['nickname'] = nickname
+                    user_data['user_icon'] = user_icon
+                    db.close()
+                    cursor.close()
+                    return user_data
+
+        db.close()
+        cursor.close()
+        user_data['nickname'] = nickname
+        return user_data

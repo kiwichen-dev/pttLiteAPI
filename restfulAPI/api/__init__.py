@@ -69,7 +69,8 @@ class InintAPP():
     #         cursor.close()
     #         return None
 
-from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticles,GetFollowingBoards,Discuss,Reply,ForgotPassword,ResetPassword,Refresh_token,UploadImg
+from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticles,GetFollowingBoards,Discuss,\
+    Reply,ForgotPassword,ResetPassword,Refresh_token,UploadImg,MemberCenter
 from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,Article_Left_Join
 
 class App(InintAPP):
@@ -92,5 +93,6 @@ class App(InintAPP):
         self.api.add_resource(ForgotPassword,'/forgotpassword')
         self.api.add_resource(ResetPassword,'/resetpassword/<token>')
         self.api.add_resource(Refresh_token,'/refresh_toekn')
-        self.api.add_resource(UploadImg,'/upload_img')      
+        self.api.add_resource(UploadImg,'/upload_img')
+        self.api.add_resource(MemberCenter,'/member_center')         
         return self.app
