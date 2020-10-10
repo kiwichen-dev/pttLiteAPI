@@ -322,15 +322,14 @@ class UserModel(InintAPP):
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
-        nickname = cursor.fetchone()['nickname']
         db.commit()
-        icon_path = 'imgs/{}/icon/'.format(email)
         user_data = dict()
+        user_data['nickname'] = cursor.fetchone()['nickname']
+        icon_path = 'imgs/{}/icon/'.format(email)
 
         try:
             files = listdir(icon_path)
         except:
-            user_data['nickname'] = nickname
             db.close()
             cursor.close()
             return user_data
@@ -338,15 +337,14 @@ class UserModel(InintAPP):
         for f in files:
             if ('.' in f) and ( f.rsplit('.', 1)[1].lower() in {'jpg','png','jpeg'} ):
                 icon_path = icon_path + str(f)
+                print(icon_path)
                 with open(r'{}'.format(icon_path), 'rb') as icon_path:
                     user_icon = base64.b64encode(icon_path.read())
-                    user_data['nickname'] = nickname
-                    user_data['user_icon'] = user_icon
+                    user_data['user_icon'] = str(user_icon)
                     db.close()
                     cursor.close()
                     return user_data
 
         db.close()
         cursor.close()
-        user_data['nickname'] = nickname
         return user_data
