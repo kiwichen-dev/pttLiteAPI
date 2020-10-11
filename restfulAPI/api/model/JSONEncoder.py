@@ -2,7 +2,8 @@ from flask.json import JSONEncoder
 from datetime import date
 
 class CustomJSONEncoder(JSONEncoder):
-    def default(self, obj):
+    @staticmethod
+    def default(obj):
         try:
             if isinstance(obj, date):
                 return obj.isoformat()

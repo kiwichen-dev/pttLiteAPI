@@ -27,10 +27,12 @@ api = Api(app)
 #db.init_app(app)
 jwt = JWTManager(app)
 
+blacklist = set()
+
 @jwt.token_in_blacklist_loader
-def check_if_token_in_blacklist(self,decrypted_token):
+def check_if_token_in_blacklist(decrypted_token):
     jti = decrypted_token['jti']
-    return jti in self.blacklist
+    return jti in blacklist
 
 class InintAPP():
     #def sqlalchemy(self):
@@ -47,7 +49,6 @@ class InintAPP():
         # self.api = Api(self.app)
         # #db.init_app(self.app)
         # self.jwt = JWTManager(self.app)
-        self.blacklist = set()
         """
         self.upload = UploadSet(name='def', extensions=IMAGES)
         self.configure_uploads(app, self.upload)
@@ -92,7 +93,8 @@ from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle
 from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,Article_Left_Join
 
 class App(InintAPP):
-    def create_app(self):
+    @staticmethod
+    def create_app(): #使用靜態方法，可省略實體化，因此該方法不用self
         api.add_resource(Index,'/index')
         api.add_resource(All_board)
         api.add_resource(Board,'/board/<string:board_name>')

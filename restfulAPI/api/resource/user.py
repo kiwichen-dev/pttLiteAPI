@@ -1,6 +1,6 @@
 from flask_restful import Resource, reqparse
 from flask import request, current_app, jsonify
-from api import InintAPP,check_if_token_in_blacklist
+from api import InintAPP,check_if_token_in_blacklist,blacklist
 import json
 from api.model.user import UserModel,min_length_str
 from api.model.boardArticle import LinkVaildate
@@ -296,13 +296,15 @@ class MemberCenter(UserModel,Resource):
 class LogoutAccessToken(UserModel,Resource):
     @jwt_required
     def post(self):
+        print('acc ok')
         jti = get_raw_jwt()['jti']
-        self.blacklist.add(jti)
-        return jsonify({"msg": "Successfully logged out"}), 200
+        blacklist.add(jti)
+        return {"msg": "Successfully logged out"}, 200
 
 class LogoutRefreshToken(UserModel,Resource):
     @jwt_refresh_token_required
     def post(self):
+        print('refresh ok')
         jti = get_raw_jwt()['jti']
-        self.blacklist.add(jti)
-        return jsonify({"msg": "Successfully logged out"}), 200
+        blacklist.add(jti)
+        return {"msg": "Successfully logged out"}, 200
