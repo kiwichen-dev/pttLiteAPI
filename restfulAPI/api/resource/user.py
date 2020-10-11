@@ -18,18 +18,18 @@ class FollowBoard(UserModel,Resource):
     def post(self,board_name):
         email = get_jwt_identity()
         if self.follow_board(email,board_name):
-            return {'msg':'sucess'},201
+            return {'msg':'sucess'},200
         else:
-            return {'msg':'error'},401
+            return {'msg':'error'},400
 
 class FollowArticle(UserModel,Resource):
     @jwt_required 
     def post(self,board_name,article_number):
         email = get_jwt_identity()
         if self.follow_article(email,board_name,article_number):
-            return {'msg':'sucess'},201
+            return {'msg':'sucess'},200
         else:
-            return {'msg':'error'},401
+            return {'msg':'error'},400
 
 class GetFollowingArticles(UserModel,Resource):
     @jwt_required
@@ -37,7 +37,7 @@ class GetFollowingArticles(UserModel,Resource):
         email = get_jwt_identity()
         followe_articles = dict()
         followe_articles['following_articles'] = self.get_following_articles(email)
-        return jsonify(followe_articles)
+        return jsonify(followe_articles),200
 
 class GetFollowingBoards(UserModel,Resource):
     @jwt_required
@@ -45,7 +45,7 @@ class GetFollowingBoards(UserModel,Resource):
         email = get_jwt_identity()
         followe_boards = dict()
         followe_boards['following_articles'] = self.get_following_boards(email)
-        return jsonify(followe_boards)
+        return jsonify(followe_boards),200
 
 class Login(UserModel,Resource):
     def post(self):
@@ -89,7 +89,7 @@ class Login(UserModel,Resource):
             db = self.connection()
             cursor = db.cursor()
             password_hash = self.set_password(password)
-            sql = "INSERT INTO users(email,pw,pw_hash) VALUES('{}','{}','{}')".format(email,password,password_hash)
+            sql = "INSERT INTO users(email,pw,pw_hash,uuid) VALUES('{}','{}','{}',uuid())".format(email,password,password_hash)
             cursor.execute(sql)
             db.commit()
             db.close()
@@ -99,46 +99,46 @@ class Login(UserModel,Resource):
                     'refresh_token': create_refresh_token(identity=email)
                 }, 201
 
-class Protected(Resource):
-    @jwt_required
-    def get(self):
-        identity = get_jwt_identity()
-        return {
-            'identity': identity
-        }, 200
+# class Protected(Resource):
+#     @jwt_required
+#     def get(self):
+#         identity = get_jwt_identity()
+#         return {
+#             'identity': identity
+#         }, 200
 
-class Register(UserModel,Resource):
-    def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument(
-            'email', type=str, required=True, help='required email'
-        )
-        parser.add_argument(
-            'username', type = min_length_str(4), required=True,
-            help='username require'
-        )
-        parser.add_argument(
-            'password', type = min_length_str(8), required=True,
-            help='password error'
-        )
-        data = parser.parse_args()
-        email = data['email']
-        username = data['username']
-        password = data['password']
-        db = self.connection()
-        cursor = db.cursor()
-        sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
-        cursor.execute(sql)
-        if cursor.fetchone():
-            cursor.close()
-            return {'message': 'user already exist'},401
-        else:
-            password_hash = self.set_password(password)
-            sql = "INSERT INTO users(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
-            cursor.execute(sql)
-            db.commit()
-            cursor.close()
-            return {'message':'user has been created'}, 201
+# class Register(UserModel,Resource):
+#     def post(self):
+#         parser = reqparse.RequestParser()
+#         parser.add_argument(
+#             'email', type=str, required=True, help='required email'
+#         )
+#         parser.add_argument(
+#             'username', type = min_length_str(4), required=True,
+#             help='username require'
+#         )
+#         parser.add_argument(
+#             'password', type = min_length_str(8), required=True,
+#             help='password error'
+#         )
+#         data = parser.parse_args()
+#         email = data['email']
+#         username = data['username']
+#         password = data['password']
+#         db = self.connection()
+#         cursor = db.cursor()
+#         sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
+#         cursor.execute(sql)
+#         if cursor.fetchone():
+#             cursor.close()
+#             return {'message': 'user already exist'},401
+#         else:
+#             password_hash = self.set_password(password)
+#             sql = "INSERT INTO users(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
+#             cursor.execute(sql)
+#             db.commit()
+#             cursor.close()
+#             return {'message':'user has been created'}, 201
 
 class ForgotPassword(UserModel,Resource):
     def get(self):
@@ -151,7 +151,7 @@ class ForgotPassword(UserModel,Resource):
         if self.forgot_password(email):
             return {'message':'susscess'}, 201
         else:
-            return {'message':'user not found'}, 401
+            return {'message':'user not found'}, 400
 
 class ResetPassword(UserModel,Resource):
     def get(self,token):
@@ -284,19 +284,9 @@ class MemberCenter(UserModel,Resource):
         email = get_jwt_identity()
         return jsonify( self.member_data(email) )
 
-# class Logout():
-#     def __init__(self):
-#         self.blacklist = set()
-
-#     @jwt.token_in_blacklist_loader
-#     def check_if_token_in_blacklist(decrypted_token):
-#         jti = decrypted_token['jti']
-#         return jti in self.blacklist
-
 class LogoutAccessToken(UserModel,Resource):
     @jwt_required
     def post(self):
-        print('acc ok')
         jti = get_raw_jwt()['jti']
         blacklist.add(jti)
         return {"msg": "Successfully logged out"}, 200
@@ -304,7 +294,6 @@ class LogoutAccessToken(UserModel,Resource):
 class LogoutRefreshToken(UserModel,Resource):
     @jwt_refresh_token_required
     def post(self):
-        print('refresh ok')
         jti = get_raw_jwt()['jti']
         blacklist.add(jti)
         return {"msg": "Successfully logged out"}, 200

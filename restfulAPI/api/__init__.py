@@ -4,11 +4,6 @@ from api.config import PymysqlConfig,Config
 #from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 from api.model.JSONEncoder import CustomJSONEncoder
-# from flask_jwt_extended import (
-#     JWTManager, jwt_required, create_access_token,
-#     get_jwt_identity
-# )
-
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_mail import Mail
@@ -26,7 +21,6 @@ mail.init_app(app)
 api = Api(app)
 #db.init_app(app)
 jwt = JWTManager(app)
-
 blacklist = set()
 
 @jwt.token_in_blacklist_loader
@@ -88,9 +82,9 @@ class InintAPP():
     #         cursor.close()
     #         return None
 
-from api.resource.user import Register,Login,Protected,FollowBoard,FollowArticle,GetFollowingArticles,GetFollowingBoards,Discuss,\
+from api.resource.user import Login,FollowBoard,FollowArticle,GetFollowingArticles,GetFollowingBoards,Discuss,\
     Reply,ForgotPassword,ResetPassword,Refresh_token,UploadImg,MemberCenter,LogoutAccessToken,LogoutRefreshToken
-from api.resource.boardArticle import Index,All_board,Article,Board,BoardToList,Article_Left_Join
+from api.resource.boardArticle import Index,All_board,Article,Board
 
 class App(InintAPP):
     @staticmethod
@@ -99,11 +93,11 @@ class App(InintAPP):
         api.add_resource(All_board)
         api.add_resource(Board,'/board/<string:board_name>')
         api.add_resource(Article,'/<string:board>/<string:article_number>')
-        api.add_resource(Article_Left_Join,'/left_join/<string:board>/<string:article_number>')
-        api.add_resource(Register,'/register')
-        api.add_resource(BoardToList,'/boardtolist')
+        # api.add_resource(Article_Left_Join,'/left_join/<string:board>/<string:article_number>')
+        # api.add_resource(Register,'/register')
+        # api.add_resource(BoardToList,'/boardtolist')
         api.add_resource(Login,'/login')
-        api.add_resource(Protected,'/protected')
+        # api.add_resource(Protected,'/protected')
         api.add_resource(FollowBoard,'/follow/<string:board_name>')
         api.add_resource(GetFollowingBoards,'/following_boards')
         api.add_resource(FollowArticle,'/follow/<string:board_name>/<string:article_number>')

@@ -26,40 +26,6 @@ def min_length_str(min_length):
     return validate
 
 class UserModel(InintAPP):
-    """
-    def get(self):
-        db = self.connection()
-        cursor = db.cursor()
-        sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
-        cursor.execute(sql)
-        if cursor.fetchone():
-            return {'message':'user already exist'}
-        else:
-            return {'message': 'user not found'},204
-    
-    @jwt_required
-    def booking(self):
-        return {"message":"token is working"},201
-    
-    def delete(self, username):
-        user = UserModel.get_by_username(username)
-        if user:
-            user.delete()
-            return {'message': 'user deleted'}
-        else:
-            return {'message': 'user not found'}, 204
-    
-    def put(self, username):
-        user = UserModel.get_by_username(username)
-        if user:
-            data = User.parser.parse_args()
-            user.password_hash = data['password']
-            user.update()
-            return user.as_dict()
-        else:
-            return {'message': "user not found"}, 204    
-    """
-    
     def set_password(self,password):
         return generate_password_hash(password)
 
@@ -284,25 +250,34 @@ class UserModel(InintAPP):
         sql = "SELECT * FROM users WHERE email = '{}'".format(email)
         cursor.execute(sql)
         res = cursor.fetchone()
+        db.close()
+        cursor.close()   
         if res:
             return True
         else:
             return False
     
     def uploadFiles(self,email):
+        db = self.connection()
+        cursor = db.cursor()
+        sql = "SELECT uuid FROM users WHERE email = '{}'".format(email)
+        cursor.execute(sql)
+        uuid = cursor.fetchone()['uuid']
         parser = reqparse.RequestParser()
         parser.add_argument('userIcon', type=FileStorage,location='files',help="userIcon is wrong.")
         img_file = parser.parse_args().get('userIcon')
+        is_img = self.is_allowed_file(img_file)
         if img_file and is_img[0]:
-            is_img = self.is_allowed_file(img_file)
-            dirname = 'imgs/{}/icon'.format(email)
+            dirname = 'imgs/{}/icon'.format(uuid)
             os.makedirs(dirname,mode=0o777,exist_ok=True)
             save_path = os.path.join(dirname,'icon.'+ is_img[1] )
             img_file.save(save_path)
             del img_file
+            del is_img
             return True
         else:
             del img_file
+            del is_img
             return False
 
     def is_allowed_file(self,uploadFile):
@@ -311,6 +286,9 @@ class UserModel(InintAPP):
             if ext in {'png','jpg', 'jpeg'}:
                 del uploadFile
                 return True,ext
+            else:
+                del uploadFile
+                return False,ext
         else:
             del uploadFile
             return False
