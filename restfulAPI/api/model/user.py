@@ -294,14 +294,15 @@ class UserModel(InintAPP):
             return False
 
     def member_data(self,email):
-        sql = "SELECT nickname FROM users WHERE email = '{}'".format(email)
+        sql = "SELECT nickname,uuid FROM users WHERE email = '{}'".format(email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
         user_data = dict()
-        user_data['nickname'] = cursor.fetchone()['nickname']
-        icon_path = 'imgs/{}/icon/'.format(email)
+        res = cursor.fetchone()
+        user_data['nickname'] = res['nickname']
+        icon_path = 'imgs/{}/icon/'.format(res['uuid'])
 
         try:
             files = listdir(icon_path)
