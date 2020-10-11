@@ -1,13 +1,13 @@
 from flask_restful import Resource, reqparse
 from flask import request, current_app, jsonify
-from api import InintAPP
+from api import InintAPP,check_if_token_in_blacklist
 import json
 from api.model.user import UserModel,min_length_str
 from api.model.boardArticle import LinkVaildate
 from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
-    create_refresh_token,
-    get_jwt_identity,jwt_refresh_token_required
+    JWTManager, jwt_required, get_jwt_identity,
+    create_access_token, create_refresh_token,
+    jwt_refresh_token_required, get_raw_jwt
 )
 from werkzeug.datastructures import FileStorage
 import os
@@ -283,3 +283,26 @@ class MemberCenter(UserModel,Resource):
     def post(self):
         email = get_jwt_identity()
         return jsonify( self.member_data(email) )
+
+# class Logout():
+#     def __init__(self):
+#         self.blacklist = set()
+
+#     @jwt.token_in_blacklist_loader
+#     def check_if_token_in_blacklist(decrypted_token):
+#         jti = decrypted_token['jti']
+#         return jti in self.blacklist
+
+class LogoutAccessToken(UserModel,Resource):
+    @jwt_required
+    def post(self):
+        jti = get_raw_jwt()['jti']
+        self.blacklist.add(jti)
+        return jsonify({"msg": "Successfully logged out"}), 200
+
+class LogoutRefreshToken(UserModel,Resource):
+    @jwt_refresh_token_required
+    def post(self):
+        jti = get_raw_jwt()['jti']
+        self.blacklist.add(jti)
+        return jsonify({"msg": "Successfully logged out"}), 200

@@ -1,12 +1,10 @@
 from datetime import datetime, timedelta
-import jwt
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from api import InintAPP
-
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
-    get_jwt_identity,decode_token
+    get_jwt_identity,decode_token,get_raw_jwt
 )
 from flask_mail import Message
 from flask_restful import Resource, reqparse
@@ -293,10 +291,10 @@ class UserModel(InintAPP):
     
     def uploadFiles(self,email):
         parser = reqparse.RequestParser()
-        parser.add_argument('userIcon', required=True, type=FileStorage,location='files',help="imgFile is wrong.")
+        parser.add_argument('userIcon', type=FileStorage,location='files',help="userIcon is wrong.")
         img_file = parser.parse_args().get('userIcon')
-        is_img = self.is_allowed_file(img_file)
-        if is_img[0]:
+        if img_file and is_img[0]:
+            is_img = self.is_allowed_file(img_file)
             dirname = 'imgs/{}/icon'.format(email)
             os.makedirs(dirname,mode=0o777,exist_ok=True)
             save_path = os.path.join(dirname,'icon.'+ is_img[1] )
