@@ -310,12 +310,32 @@ class UserModel(InintAPP):
         cursor.close()
         return res
 
+    def login_records(self,uuid):
+        sql = "INSERT INTO LoginRecords(user_uuid,login_time,ip) VALUES('{}',now(),'111.111.111.111')".format(uuid)
+        db = self.connection()
+        cursor = db.cursor()
+        cursor.execute(sql)
+        db.commit()
+        db.close()
+        cursor.close()
+
+    def get_login_records(self,uuid):
+        sql = "SELECT login_time,ip FROM LoginRecords WHERE user_uuid = '{}'".format(uuid)
+        db = self.connection()
+        cursor = db.cursor()
+        cursor.execute(sql)
+        res = cursor.fetchall()
+        db.close()
+        cursor.close()
+        return res
+
     def member_data(self,uuid):
         user_data = dict()
         user_data['following_boards'] = self.get_following_boards(uuid)
         user_data['following_articles'] = self.get_following_articles(uuid)
         user_data['my_reply'] = self.my_reply(uuid)
         user_data['my_discussions'] = self.my_discussions(uuid)
+        user_data['login_records'] = self.get_login_records(uuid)
 
         sql = "SELECT nickname,email FROM Users WHERE user_uuid = '{}'".format(uuid)
         db = self.connection()
@@ -325,6 +345,7 @@ class UserModel(InintAPP):
         res = cursor.fetchone()
         user_data['nickname'] = res['nickname']
         user_data['email'] = res['email']
+        user_data['user_icon'] = None
         icon_path = 'imgs/{}/icon/'.format(uuid)
         try:
             files = listdir(icon_path)

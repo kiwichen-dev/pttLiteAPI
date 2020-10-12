@@ -69,6 +69,7 @@ class Login(UserModel,Resource):
             vaildate = self.vaildate_password(email,password)
             if vaildate[0]:
                 uuid = vaildate[1]
+                self.login_records(uuid)
                 return {
                     'access_token': create_access_token(identity=uuid),
                     'refresh_token': create_refresh_token(identity=uuid)
