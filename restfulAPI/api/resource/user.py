@@ -16,20 +16,20 @@ import base64
 class FollowBoard(UserModel,Resource):
     @jwt_required 
     def post(self,board_name):
-        email = get_jwt_identity()
-        if self.follow_board(email,board_name):
-            return {'msg':'sucess'},200
+        uuid = get_jwt_identity()
+        if self.follow_board(uuid,board_name):
+            return {'msg':'sucess'},201
         else:
-            return {'msg':'error'},400
+            return {'msg':'board not found'},404
 
 class FollowArticle(UserModel,Resource):
     @jwt_required 
     def post(self,board_name,article_number):
-        email = get_jwt_identity()
-        if self.follow_article(email,board_name,article_number):
-            return {'msg':'sucess'},200
+        uuid = get_jwt_identity()
+        if self.follow_article(uuid,board_name,article_number):
+            return {'msg':'sucess'},201
         else:
-            return {'msg':'error'},400
+            return {'msg':'article not found'},404
 
 class GetFollowingArticles(UserModel,Resource):
     @jwt_required
@@ -87,14 +87,14 @@ class Login(UserModel,Resource):
             # data = parser.parse_args()
             # email = data['email']
             # password = data['password']
-            user_id = self.random_user_id()
+            user_id = self.random_user_id
             db = self.connection()
             cursor = db.cursor()
             password_hash = self.set_password(password)
-            sql = "INSERT INTO users(email,nickname,pw,pw_hash,create_time,user_uuid) VALUES('{}','{}','{}','{}',now(),uuid())".format(email,user_id,password,password_hash)
+            sql = "INSERT INTO Users(email,nickname,pw,pw_hash,create_time,user_uuid) VALUES('{}','{}','{}','{}',now(),uuid())".format(email,user_id,password,password_hash)
             cursor.execute(sql)
             db.commit()
-            sql = "SELECT user_uuid FROM users WHERE nickname = '{}'".format(user_id)
+            sql = "SELECT user_uuid FROM Users WHERE nickname = '{}'".format(user_id)
             cursor.execute(sql)
             uuid = cursor.fetchone()['user_uuid']
             db.close()
@@ -165,7 +165,7 @@ class ResetPassword(UserModel,Resource):
         else:
             return {'msg':'Link has revoked'},401
 
-class Discuss(Resource,UserModel,LinkVaildate):
+class Discuss(Resource,UserModel):
     @jwt_required
     def post(self):
         uuid = get_jwt_identity()
@@ -193,11 +193,15 @@ class Discuss(Resource,UserModel,LinkVaildate):
         discussion = data['discussion']
         respone_user_ip = data['respone_user_ip']
 
-        if self.vaildate_article(board_name,article_number):
-            self.discuss(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
+        if self.discuss(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
             return {'message':'discussion submit'}, 201
         else:
             return {'message':'Can not find the article'}, 400
+        # if self.vaildate_article(board_name,article_number):
+        #     self.discuss(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
+        #     return {'message':'discussion submit'}, 201
+        # else:
+        #     return {'message':'Can not find the article'}, 400
 
     @jwt_required
     def put(self):

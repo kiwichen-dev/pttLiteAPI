@@ -12,7 +12,7 @@ from werkzeug.datastructures import FileStorage
 import os
 import base64
 from os import listdir
-
+from api.model.boardArticle import LinkVaildate
 
 class UserModel(InintAPP):
     def min_length_str(self,min_length):
@@ -65,40 +65,49 @@ class UserModel(InintAPP):
         cursor.close()
         return res
 
-    def follow_board(self,email,board_name):
-        sql = "INSERT INTO FollowingBoards(id,board_name,create_time) VALUES( (SELECT user_uuid FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
-        db = self.connection()
-        cursor = db.cursor()
-        cursor.execute(sql)
-        db.commit()
-        cursor.close()
-        return True
+    def follow_board(self,uuid,board_name):
+        if LinkVaildate.vaildate_board(board_name):
+            # sql = "INSERT INTO FollowingBoards(user_uuid,board_name,create_time) VALUES( (SELECT user_uuid FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
+            sql = "INSERT INTO FollowingBoards (user_uuid,board_name,create_time) VALUES ('{}','{}',now())".format(uuid,board_name)
+            db = self.connection()
+            cursor = db.cursor()
+            cursor.execute(sql)
+            db.commit()
+            cursor.close()
+            return True
+        else:
+            return False
 
-    def follow_article(self,email,board_name,article_number):
-        article_url = "/" + board_name + "/" + article_number
-        sql = "INSERT INTO FollowingArticles(id,article_url,board_name,article_number,create_time)\
-             VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
-        db = self.connection()
-        cursor = db.cursor()
-        cursor.execute(sql)
-        db.commit()
-        db.close()
-        cursor.close()
-        return True
+    def follow_article(self,uuid,board_name,article_number):
+        if LinkVaildate.vaildate_article(board_name,article_number):
+            article_url = "/" + board_name + "/" + article_number
+            # sql = "INSERT INTO FollowingArticles(id,article_url,board_name,article_number,create_time)\
+            #      VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
+            sql = "INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(uuid,article_url,board_name,article_number)
+            db = self.connection()
+            cursor = db.cursor()
+            cursor.execute(sql)
+            db.commit()
+            db.close()
+            cursor.close()
+            return True
+        else:
+            return False
 
-    def get_following_boards(self,email):
-        sql = "SELECT board_name,create_time FROM FollowingBoards WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
+    def get_following_boards(self,uuid):
+        # sql = "SELECT board_name,create_time FROM FollowingBoards WHERE user_uuid = (SELECT id FROM users WHERE email ='{}')".format(email)
+        sql = "SELECT * FROM FollowingBoards WHERE user_uuid = '{}'".format(uuid)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
-        res = cursor.fetchall()[0]
+        res = cursor.fetchall()
         db.close()
         cursor.close()
         return res
 
-    def get_following_articles(self,email):
-        sql = "SELECT article_url,create_time FROM FollowingArticles WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
-        print(email)
+    def get_following_articles(self,uuid):
+        # sql = "SELECT article_url,create_time FROM FollowingArticles WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
+        sql = "SELECT * FROM FollowingArticles WHERE user_uuid = '{}'".format(uuid)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -108,32 +117,36 @@ class UserModel(InintAPP):
         return res
     
     def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
-        sql = \
-        "INSERT INTO ArticleDiscussions(\
-            from_pttLite,\
-            board_name,\
-            article_number,\
-            respone_type,\
-            respone_user_id,\
-            discussion,\
-            respone_user_ip,\
-            create_time,\
-            last_update\
-            )\
-        VALUES(true,'{}','{}','{}','{}','{}','{}',NOW(),NOW())".format(
-            board_name,
-            article_number,
-            respone_type,
-            respone_user_id,
-            discussion,
-            respone_user_ip
-        )
-        db = self.connection()
-        cursor = db.cursor()
-        cursor.execute(sql)
-        db.commit()
-        db.close()
-        cursor.close()
+        if LinkVaildate.vaildate_article(board_name,article_number):
+            sql = \
+            "INSERT INTO ArticleDiscussions(\
+                from_pttLite,\
+                board_name,\
+                article_number,\
+                respone_type,\
+                respone_user_id,\
+                discussion,\
+                respone_user_ip,\
+                create_time,\
+                last_update\
+                )\
+            VALUES(true,'{}','{}','{}','{}','{}','{}',NOW(),NOW())".format(
+                board_name,
+                article_number,
+                respone_type,
+                respone_user_id,
+                discussion,
+                respone_user_ip
+            )
+            db = self.connection()
+            cursor = db.cursor()
+            cursor.execute(sql)
+            db.commit()
+            db.close()
+            cursor.close()
+            return True
+        else:
+            return False
 
     def reply(self,articleDiscussions_nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip):
         sql = \
@@ -167,7 +180,7 @@ class UserModel(InintAPP):
     def forgot_password(self,email):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM Users WHERE email = '%s'" % (email)
+        sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
         cursor.execute(sql)
         if cursor.fetchone():
             access_token = create_access_token(identity=email)
@@ -276,14 +289,39 @@ class UserModel(InintAPP):
         else:
             del uploadFile
             return False
+    
+    def my_reply(self,uuid):
+        sql = "SELECT * FROM ReplyFromPttLite WHERE respone_user_id = ( SELECT nickname FROM Users WHERE user_uuid = '{}' )".format(uuid)
+        db = self.connection()
+        cursor = db.cursor()
+        cursor.execute(sql)
+        res = cursor.fetchall()
+        db.close()
+        cursor.close()
+        return res
+
+    def my_discussions(self,uuid):
+        sql = "SELECT * FROM ArticleDiscussions WHERE respone_user_id = ( SELECT nickname FROM Users WHERE user_uuid = '{}' )".format(uuid)
+        db = self.connection()
+        cursor = db.cursor()
+        cursor.execute(sql)
+        res = cursor.fetchall()
+        db.close()
+        cursor.close()
+        return res
 
     def member_data(self,uuid):
+        user_data = dict()
+        user_data['following_boards'] = self.get_following_boards(uuid)
+        user_data['following_articles'] = self.get_following_articles(uuid)
+        user_data['my_reply'] = self.my_reply(uuid)
+        user_data['my_discussions'] = self.my_discussions(uuid)
+
         sql = "SELECT nickname,email FROM Users WHERE user_uuid = '{}'".format(uuid)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
         db.commit()
-        user_data = dict()
         res = cursor.fetchone()
         user_data['nickname'] = res['nickname']
         user_data['email'] = res['email']

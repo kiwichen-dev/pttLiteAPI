@@ -65,9 +65,10 @@ class Pushcount():
         self.__bad = list()
 
 class LinkVaildate(InintAPP):
-    def vaildate_article(self,board_name,article_number):
-        sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
-        db = self.connection()
+    @staticmethod
+    def vaildate_board(board_name):
+        sql = "SELECT * FROM Category WHERE board_name = '{}'".format(board_name)
+        db = InintAPP.connection()
         cursor = db.cursor()
         cursor.execute(sql)
         res = cursor.fetchone()
@@ -78,9 +79,24 @@ class LinkVaildate(InintAPP):
         else:
             return False
 
-    def vaildate_discussion(self,nu,board_name,article_number):
+    @staticmethod
+    def vaildate_article(board_name,article_number):
+        sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
+        db = InintAPP.connection()
+        cursor = db.cursor()
+        cursor.execute(sql)
+        res = cursor.fetchone()
+        db.close()
+        cursor.close()
+        if res:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def vaildate_discussion(nu,board_name,article_number):
         sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(nu,board_name,article_number)
-        db = self.connection()
+        db = InintAPP.connection()
         cursor = db.cursor()
         cursor.execute(sql)
         res = cursor.fetchone()

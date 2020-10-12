@@ -54,8 +54,9 @@ class InintAPP():
         self.nba = None
         self.baseball = None
         self.c_chat = None
-
-    def connection(self):
+    
+    @staticmethod
+    def connection():
         pool = Pool(
                     host=PymysqlConfig.host,
                     port=PymysqlConfig.port, 
@@ -67,6 +68,7 @@ class InintAPP():
         pool.get_conn()
         return pool.get_conn()
 
+    @property
     def random_user_id(self):
         return ''.join(random.sample(string.ascii_letters + string.digits, 8))
 
@@ -104,9 +106,9 @@ class App(InintAPP):
         api.add_resource(Login,'/login')
         # api.add_resource(Protected,'/protected')
         api.add_resource(FollowBoard,'/follow/<string:board_name>')
-        api.add_resource(GetFollowingBoards,'/following_boards')
+        # api.add_resource(GetFollowingBoards,'/following_boards')
         api.add_resource(FollowArticle,'/follow/<string:board_name>/<string:article_number>')
-        api.add_resource(GetFollowingArticles,'/following_articles')
+        # api.add_resource(GetFollowingArticles,'/following_articles')
         api.add_resource(Discuss,'/discuss')
         api.add_resource(Reply,'/reply')
         api.add_resource(ForgotPassword,'/forgotpassword')
