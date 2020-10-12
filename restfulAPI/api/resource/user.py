@@ -2,7 +2,7 @@ from flask_restful import Resource, reqparse
 from flask import request, current_app, jsonify
 from api import InintAPP,check_if_token_in_blacklist,blacklist
 import json
-from api.model.user import UserModel,min_length_str
+from api.model.user import UserModel
 from api.model.boardArticle import LinkVaildate
 from flask_jwt_extended import (
     JWTManager, jwt_required, get_jwt_identity,
@@ -50,11 +50,15 @@ class GetFollowingBoards(UserModel,Resource):
 class Login(UserModel,Resource):
     def post(self):
         parser = reqparse.RequestParser()
+        # parser.add_argument(
+        #     'user_id', type = self.min_length_str(6), required=True,
+        #     help='require user id'
+        # )
         parser.add_argument(
             'email', type=str, required=True, help='required email'
         )
         parser.add_argument(
-            'password', type = min_length_str(8), required=True,
+            'password', type = self.min_length_str(8), required=True,
             help='require password'
         )
         data = parser.parse_args()
@@ -62,41 +66,42 @@ class Login(UserModel,Resource):
         password = data['password']
 
         if self.isUser(email):
-            if self.vaildate_password(email,password):
+            vaildate = self.vaildate_password(email,password)
+            if vaildate[0]:
+                uuid = vaildate[1]
                 return {
-                    'access_token': create_access_token(identity=email),
-                    'refresh_token': create_refresh_token(identity=email)
+                    'access_token': create_access_token(identity=uuid),
+                    'refresh_token': create_refresh_token(identity=uuid)
                 }, 200
             else:
                 return {'msg':'wrong of email or password '},401
         else:
-            parser = reqparse.RequestParser()
-            parser.add_argument(
-                'email', type=str, required=True, help='required email'
-            )
+            # parser = reqparse.RequestParser()
             # parser.add_argument(
-            #     'username', type = min_length_str(4), required=True,
-            #     help='username require'
+            #     'email', type=str, required=True, help='required email'
             # )
-            parser.add_argument(
-                'password', type = min_length_str(8), required=True,
-                help='password error'
-            )
-            data = parser.parse_args()
-            email = data['email']
-            # username = data['username']
-            password = data['password']
+            # parser.add_argument(
+            #     'password', type = self.min_length_str(8), required=True,
+            #     help='password error'
+            # )
+            # data = parser.parse_args()
+            # email = data['email']
+            # password = data['password']
+            user_id = self.random_user_id()
             db = self.connection()
             cursor = db.cursor()
             password_hash = self.set_password(password)
-            sql = "INSERT INTO users(email,pw,pw_hash,uuid) VALUES('{}','{}','{}',uuid())".format(email,password,password_hash)
+            sql = "INSERT INTO users(email,nickname,pw,pw_hash,create_time,user_uuid) VALUES('{}','{}','{}','{}',now(),uuid())".format(email,user_id,password,password_hash)
             cursor.execute(sql)
             db.commit()
+            sql = "SELECT user_uuid FROM users WHERE nickname = '{}'".format(user_id)
+            cursor.execute(sql)
+            uuid = cursor.fetchone()['user_uuid']
             db.close()
             cursor.close()
             return {
-                    'access_token': create_access_token(identity=email),
-                    'refresh_token': create_refresh_token(identity=email)
+                    'access_token': create_access_token(identity=uuid),
+                    'refresh_token': create_refresh_token(identity=uuid)
                 }, 201
 
 # class Protected(Resource):
@@ -114,11 +119,11 @@ class Login(UserModel,Resource):
 #             'email', type=str, required=True, help='required email'
 #         )
 #         parser.add_argument(
-#             'username', type = min_length_str(4), required=True,
+#             'username', type = self.min_length_str(4), required=True,
 #             help='username require'
 #         )
 #         parser.add_argument(
-#             'password', type = min_length_str(8), required=True,
+#             'password', type = self.min_length_str(8), required=True,
 #             help='password error'
 #         )
 #         data = parser.parse_args()
@@ -156,13 +161,18 @@ class ForgotPassword(UserModel,Resource):
 class ResetPassword(UserModel,Resource):
     def get(self,token):
         if self.reset_password(token):
-            return 201
+            return {'msg':'password changed!'},201
         else:
-            return 401
+            return {'msg':'Link has revoked'},401
 
 class Discuss(Resource,UserModel,LinkVaildate):
+    @jwt_required
     def post(self):
+        uuid = get_jwt_identity()
         parser = reqparse.RequestParser()
+        parser.add_argument(
+            'board_name', type=str, required=True, help='required board_name'
+        )
         parser.add_argument(
             'article_number', type=str, required=True, help='required article_number'
         )
@@ -170,36 +180,39 @@ class Discuss(Resource,UserModel,LinkVaildate):
             'respone_type', type=str, required=True, help='required respone_type'
         )
         parser.add_argument(
-            'respone_user_id', type=str, required=True, help='required respone_user_id'
-        )
-        parser.add_argument(
-            'discuss', type=str, required=True, help='required discuss'
+            'discussion', type=str, required=True, help='required discussion'
         )
         parser.add_argument(
             'respone_user_ip', type=str, required=True, help='required respone_user_ip'
         )
-        parser.add_argument(
-            'board_name', type=str, required=True, help='required board_name'
-        )
         data = parser.parse_args()
+        board_name = data['board_name']
         article_number = data['article_number']
         respone_type = data['respone_type']
-        respone_user_id = data['respone_user_id']
+        respone_user_id = self.get_user_by_uuid(uuid)['nickname']
         discussion = data['discussion']
         respone_user_ip = data['respone_user_ip']
-        board_name = data['board_name']
 
-        if self.check_Discussion(board_name,article_number):
-            self.discuss(article_number,respone_type,respone_user_id,discussion,respone_user_ip,board_name)
+        if self.vaildate_article(board_name,article_number):
+            self.discuss(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
             return {'message':'discussion submit'}, 201
         else:
             return {'message':'Can not find the article'}, 400
 
+    @jwt_required
+    def put(self):
+        pass
+
 class Reply(Resource,UserModel,LinkVaildate):
+    @jwt_required
     def post(self):
+        uuid = get_jwt_identity()
         parser = reqparse.RequestParser()
         parser.add_argument(
-            'article_discussion_id', type=str, required=True, help='required article_discussion_id'
+            'nu', type=str, required=True, help='required nu'
+        )
+        parser.add_argument(
+            'board_name', type=str, required=True, help='required board_name'
         )
         parser.add_argument(
             'article_number', type=str, required=True, help='required article_number'
@@ -208,28 +221,22 @@ class Reply(Resource,UserModel,LinkVaildate):
             'respone_type', type=str, required=True, help='required respone_type'
         )
         parser.add_argument(
-            'respone_user_id', type=str, required=True, help='required respone_user_id'
-        )   
-        parser.add_argument(
-            'discuss', type=str, required=True, help='required discuss'
+            'reply', type=str, required=True, help='required reply'
         )
         parser.add_argument(
             'respone_user_ip', type=str, required=True, help='required respone_user_ip'
         )
-        parser.add_argument(
-            'board_name', type=str, required=True, help='required board_name'
-        )
         data = parser.parse_args()
-        article_discussion_id = data['article_discussion_id']
+        nu = data['nu']
+        board_name = data['board_name']
         article_number = data['article_number']
         respone_type = data['respone_type']
-        respone_user_id = data['respone_user_id']
-        discussion = data['discussion']
+        respone_user_id = self.get_user_by_uuid(uuid)['nickname']
+        reply = data['reply']
         respone_user_ip = data['respone_user_ip']
-        board_name = data['board_name']
 
-        if self.check_Reply(board_name,article_number,article_discussion_id):
-            self.reply(article_discussion_id,article_number,respone_type,respone_user_id,discussion,respone_user_ip,board_name)
+        if self.vaildate_discussion(nu,board_name,article_number):
+            self.reply(nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip)
             return {'message':'reply submit'}, 201
         else:
             return {'message':'Can not find the article'}, 400
@@ -237,8 +244,8 @@ class Reply(Resource,UserModel,LinkVaildate):
 class Refresh_token(UserModel,Resource):
     @jwt_refresh_token_required
     def post(self):
-        email = get_jwt_identity()
-        token = self.refresh_token(email)
+        uuid = get_jwt_identity()
+        token = self.refresh_token(uuid)
         if token:
             return token,200
         else:
@@ -251,8 +258,8 @@ class UploadImg(UserModel,Resource):
         
     @jwt_required
     def post(self):
-        email = get_jwt_identity()
-        if self.uploadFiles(email):
+        uuid = get_jwt_identity()
+        if self.uploadFiles(uuid):
             return {'msg':'sucess'}, 201
         else:
             return {'msg':'png,jpg,jpeg only'}, 400
@@ -281,8 +288,8 @@ class UploadImg(UserModel,Resource):
 class MemberCenter(UserModel,Resource):
     @jwt_required
     def post(self):
-        email = get_jwt_identity()
-        return jsonify( self.member_data(email) )
+        uuid = get_jwt_identity()
+        return jsonify( self.member_data(uuid) )
 
 class LogoutAccessToken(UserModel,Resource):
     @jwt_required

@@ -8,14 +8,14 @@ class Index(InintAPP,Resource):
     def get(self):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT DISTINCT board_name FROM category"
+        sql = "SELECT DISTINCT board_name FROM Category"
         cursor.execute(sql)
         distinct_board_name = cursor.fetchall()
         distinct_board_name_top = list()
         board_to_list = dict()
         for board_name in distinct_board_name:
             #sql = "select * from(select * from article order by push_count desc) as s group by board_name"
-            sql = "SELECT * FROM articles WHERE board_name = '{}' ORDER BY discussion_count DESC LIMIT 1".format(board_name['board_name'])
+            sql = "SELECT * FROM Articles WHERE board_name = '{}' ORDER BY discussion_count DESC LIMIT 1".format(board_name['board_name'])
             cursor.execute(sql)
             d_result = cursor.fetchone()
             if d_result:
@@ -23,7 +23,7 @@ class Index(InintAPP,Resource):
 
         package = dict()
         package['articles'] = distinct_board_name_top
-        sql = "SELECT * FROM top_8_like_count_boards ORDER BY like_count DESC LIMIT 8"
+        sql = "SELECT * FROM Top8LikeCountBoards ORDER BY like_count DESC LIMIT 8"
         cursor.execute(sql)
         top_8_like_count_boards = cursor.fetchall()
         package['top_8_like_count_boards'] = top_8_like_count_boards
@@ -41,7 +41,7 @@ class Board(InintAPP,Resource):
         print(limit)
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
+        sql = "SELECT * FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
         cursor.execute(sql)
         query_result = cursor.fetchall()
         if query_result:
@@ -69,19 +69,19 @@ class All_board(InintAPP,Resource):
         return jsonify(package)
 
 class Article(InintAPP,Resource):
-    def get(self,board,article_number):
+    def get(self,board_name,article_number):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM articles WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
+        sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
         cursor.execute(sql)
         article_content = cursor.fetchall()[0]
         if article_content:
         #if article_number.startswith('M.'):
-            sql = "SELECT discussion_id,from_pttLite,respone_type,respone_user_id,discussion,respone_user_ip,create_time FROM article_discussions WHERE article_number ='%s'" % (article_number)
+            sql = "SELECT nu,from_pttLite,respone_type,respone_user_id,discussion,respone_user_ip,create_time FROM ArticleDiscussions WHERE article_number ='{}'".format(article_number)
             cursor.execute(sql)
             article_discussions = cursor.fetchall()
 
-            sql = "SELECT reply_id,article_discussion_id,respone_type,respone_user_id,discussion,respone_user_ip,create_time,last_update FROM reply_from_pttLite WHERE article_number ='%s'" % (article_number)
+            sql = "SELECT nu,respone_type,respone_user_id,reply,respone_user_ip,create_time,last_update FROM ReplyFromPttLite WHERE board_name = '{}' AND article_number ='{}'".format(board_name,article_number)
             cursor.execute(sql)
             reply_from_pttLite = cursor.fetchall()
 
@@ -120,7 +120,7 @@ def search():
         keyWord = request.form.get('keyWord')
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM articles WHERE title LIKE '%s'" % ('%'+ keyWord +'%')
+        sql = "SELECT * FROM Articles WHERE title LIKE '%s'" % ('%'+ keyWord +'%')
         cursor.execute(sql)
         searchingResult = cursor.fetchall()
         db.close()
@@ -131,7 +131,7 @@ class BoardToList(InintAPP,Resource):
     def get(self):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT DISTINCT board_name FROM category ORDER BY board_name ASC"
+        sql = "SELECT DISTINCT board_name FROM Category ORDER BY board_name ASC"
         cursor.execute(sql)
         distinct_board_name = cursor.fetchall()
         board_to_list = dict()
@@ -147,26 +147,26 @@ class Article_Left_Join(InintAPP,Resource):
     def get(self,board,article_number):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM articles WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
+        sql = "SELECT * FROM Articles WHERE board_name = '%s' AND article_number = '%s'" % (board,article_number)
         cursor.execute(sql)
         if cursor.fetchone():
-            sql = "SELECT * FROM articles WHERE article_number = '%s'" % (article_number)
+            sql = "SELECT * FROM Articles WHERE article_number = '%s'" % (article_number)
             cursor.execute(sql)
             article_content = cursor.fetchone()
 
-            sql = "SELECT COUNT(*) FROM article_discussions WHERE article_number = '%s' and respone_type='推 '" % (article_number)
+            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '%s' and respone_type='推 '" % (article_number)
             cursor.execute(sql)
             like = cursor.fetchone()
             
-            sql = "SELECT COUNT(*) FROM article_discussions WHERE article_number = '%s' and respone_type='→ '" % (article_number)
+            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '%s' and respone_type='→ '" % (article_number)
             cursor.execute(sql)
             neutral = cursor.fetchone()
 
-            sql = "SELECT COUNT(*) FROM article_discussions WHERE article_number = '%s' and respone_type='噓 '" % (article_number)
+            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '%s' and respone_type='噓 '" % (article_number)
             cursor.execute(sql)
             diskike = cursor.fetchone()
 
-            sql = "SELECT * FROM article_discussions LEFT JOIN reply_from_pttLite ON article_discussions.discussion.id  = reply_from_pttLite.article_discussion_id WHERE article_discussions.article_number = '%s'" % (article_number)
+            sql = "SELECT * FROM ArticleDiscussions LEFT JOIN reply_from_pttLite ON article_discussions.discussion.id  = reply_from_pttLite.article_discussion_id WHERE ArticleDiscussions.article_number = '%s'" % (article_number)
             cursor.execute(sql)
             reply_from_pttLite = cursor.fetchall()
 

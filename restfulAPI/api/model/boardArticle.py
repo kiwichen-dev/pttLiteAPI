@@ -65,26 +65,28 @@ class Pushcount():
         self.__bad = list()
 
 class LinkVaildate(InintAPP):
-    def check_Discussion(self,board,article):
-        sql = "SELECT * FROM articles WHERE board_name = '%s' AND article_number = '%s'" % (board,article)
-        pymysql = self.connection()
-        cursor = pymysql.cursor()
+    def vaildate_article(self,board_name,article_number):
+        sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
+        db = self.connection()
+        cursor = db.cursor()
         cursor.execute(sql)
-        if cursor.fetchone():
-            cursor.close()
+        res = cursor.fetchone()
+        db.close()
+        cursor.close()
+        if res:
             return True
         else:
-            cursor.close()
             return False
 
-    def check_Reply(self,board,article,discussion_id):
-        sql = "SELECT * FROM article_discussions WHERE board_name = '%s' AND article_number = '%s' AND discussion_id ='%s'" % (board,article,discussion_id)
-        pymysql = self.connection()
-        cursor = pymysql.cursor()
+    def vaildate_discussion(self,nu,board_name,article_number):
+        sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(nu,board_name,article_number)
+        db = self.connection()
+        cursor = db.cursor()
         cursor.execute(sql)
-        if cursor.fetchone():
-            cursor.close()
+        res = cursor.fetchone()
+        db.close()
+        cursor.close()
+        if res:
             return True
         else:
-            cursor.close()
             return False

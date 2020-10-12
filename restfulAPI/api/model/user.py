@@ -13,48 +13,40 @@ import os
 import base64
 from os import listdir
 
-def min_length_str(min_length):
-    def validate(s):
-        if s is None:
-            raise Exception('password required')
-        if not isinstance(s, (int, str)):
-            raise Exception('password format error')
-        s = str(s)
-        if len(s) >= min_length:
-            return s
-        raise Exception("String must be at least %i characters long" % min_length)
-    return validate
 
 class UserModel(InintAPP):
+    def min_length_str(self,min_length):
+        def validate(s):
+            if s is None:
+                raise Exception('password required')
+            if not isinstance(s, (int, str)):
+                raise Exception('password format error')
+            s = str(s)
+            if len(s) >= min_length:
+                return s
+            raise Exception("String must be at least %i characters long" % min_length)
+        return validate
+
     def set_password(self,password):
         return generate_password_hash(password)
 
     def vaildate_password(self,email,password):
-        sql = "SELECT pw_hash FROM users WHERE email = '{}'".format(email)
         db = self.connection()
         cursor = db.cursor()
+        sql = "SELECT pw_hash,user_uuid FROM Users WHERE email = '{}'".format(email)
         cursor.execute(sql)
-        password_hash = cursor.fetchone()['pw_hash']
+        res = cursor.fetchone()
+        password_hash = res['pw_hash']
+        uuid = res['user_uuid']
         db.commit()
         cursor.close()
-        if password_hash:
-            return check_password_hash(password_hash,password)
+        if check_password_hash(password_hash,password):
+            return True,uuid
         else:
             return False
 
-    @staticmethod
-    def get_by_username(username):
-        sql = "SELECT * FROM users WHERE nickname = '{}'".format(username)
-        db = self.connection()
-        cursor = db.cursor()
-        cursor.execute(sql)
-        user = cursor.fetchone()
-        if user:
-            return user
-
-    @staticmethod
-    def get_by_id(username):
-        sql = "SELECT nickname FROM users WHERE nickname = '{}'".format(username)
+    def get_user_data(self,email):
+        sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -63,9 +55,8 @@ class UserModel(InintAPP):
         cursor.close()
         return res
 
-    @staticmethod
-    def get_user_list(username):
-        sql = "SELECT nickname FROM user" % (username)
+    def get_user_by_uuid(self,uuid):
+        sql = "SELECT * FROM Users WHERE user_uuid = '{}'".format(uuid)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -75,7 +66,7 @@ class UserModel(InintAPP):
         return res
 
     def follow_board(self,email,board_name):
-        sql = "INSERT INTO following_boards(id,board_name,create_time) VALUES( (SELECT id FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
+        sql = "INSERT INTO FollowingBoards(id,board_name,create_time) VALUES( (SELECT user_uuid FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -85,7 +76,7 @@ class UserModel(InintAPP):
 
     def follow_article(self,email,board_name,article_number):
         article_url = "/" + board_name + "/" + article_number
-        sql = "INSERT INTO following_articles(id,article_url,board_name,article_number,create_time)\
+        sql = "INSERT INTO FollowingArticles(id,article_url,board_name,article_number,create_time)\
              VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
         db = self.connection()
         cursor = db.cursor()
@@ -96,7 +87,7 @@ class UserModel(InintAPP):
         return True
 
     def get_following_boards(self,email):
-        sql = "SELECT board_name,create_time FROM following_boards WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
+        sql = "SELECT board_name,create_time FROM FollowingBoards WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -106,7 +97,7 @@ class UserModel(InintAPP):
         return res
 
     def get_following_articles(self,email):
-        sql = "SELECT article_url,create_time FROM following_articles WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
+        sql = "SELECT article_url,create_time FROM FollowingArticles WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
         print(email)
         db = self.connection()
         cursor = db.cursor()
@@ -116,26 +107,26 @@ class UserModel(InintAPP):
         cursor.close()
         return res
     
-    def discuss(self,article_number,respone_type,respone_user_id,discussion,respone_user_ip,board_name):
+    def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
         sql = \
-        "INSERT INTO article_discussions(\
-            from_pttLite, \
+        "INSERT INTO ArticleDiscussions(\
+            from_pttLite,\
+            board_name,\
             article_number,\
             respone_type,\
             respone_user_id,\
             discussion,\
             respone_user_ip,\
             create_time,\
-            last_update,\
-            board_name\
+            last_update\
             )\
-        VALUES(true,'{},'{}','{}','{}','{}',NOW(),NOW(),'{}')".format(
+        VALUES(true,'{}','{}','{}','{}','{}','{}',NOW(),NOW())".format(
+            board_name,
             article_number,
             respone_type,
             respone_user_id,
             discussion,
-            respone_user_ip,
-            board_name
+            respone_user_ip
         )
         db = self.connection()
         cursor = db.cursor()
@@ -144,27 +135,27 @@ class UserModel(InintAPP):
         db.close()
         cursor.close()
 
-    def reply(self,article_discussion_id,article_number,respone_type,respone_user_id,discussion,respone_user_ip,board_name):
+    def reply(self,articleDiscussions_nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip):
         sql = \
-        "INSERT INTO reply_from_pttLite(\
-            article_discussion_id,\
+        "INSERT INTO ReplyFromPttLite(\
+            articleDiscussions_nu,\
+            board_name,\
             article_number,\
             respone_type,\
             respone_user_id,\
-            discussion,\
+            reply,\
             respone_user_ip,\
             create_time,\
-            last_update,\
-            board_name\
+            last_update\
             )\
-        VALUES({},'{}','{}','{}','{}','{}',now(),now(),'{}')".format(
-            article_discussion_id,
+        VALUES({},'{}','{}','{}','{}','{}','{}',now(),now())".format(
+            articleDiscussions_nu,
+            board_name,
             article_number,
             respone_type,
             respone_user_id,
-            discussion,
-            respone_user_ip,
-            board_name
+            reply,
+            respone_user_ip
         )
         db = self.connection()
         cursor = db.cursor()
@@ -176,7 +167,7 @@ class UserModel(InintAPP):
     def forgot_password(self,email):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM users WHERE email = '%s'" % (email)
+        sql = "SELECT * FROM Users WHERE email = '%s'" % (email)
         cursor.execute(sql)
         if cursor.fetchone():
             access_token = create_access_token(identity=email)
@@ -200,54 +191,52 @@ class UserModel(InintAPP):
             return False
     
     def vaildate_token(self,token):
-        email = decode_token(token)['identity']
+        uuid = decode_token(token)['identity']
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM users WHERE email = '{}' ".format(email)
+        sql = "SELECT * FROM Users WHERE user_uuid = '{}' ".format(uuid)
         cursor.execute(sql)
-        if cursor.fetchone():
-            db.close()
-            cursor.close()
-            return True,email
+        res = cursor.fetchone()
+        db.close()
+        cursor.close()
+        if res:
+            return True,uuid
         else:
-            db.close()
-            cursor.close()
             return False
     
     def reset_password(self,token):
-        if self.vaildate_token(token)[0]:
+        vaild = self.vaildate_token(token)
+        if vaild[0]:
             parser = reqparse.RequestParser()
             parser.add_argument(
-                'password', type = min_length_str(8), required=True,
+                'password', type = self.min_length_str(8), required=True,
                 help='password require and length >= 8'
             )
             data = parser.parse_args()
-            email = self.vaildate_token(token)[1]
             password = data['password']
             password_hash = self.set_password(password)
+            uuid = vaild[1]
             db = self.connection()
             cursor = db.cursor()
-            sql = "UPDATE users SET pw = '{}', pw_hash = '{}' WHERE email = '{}'".format(password,password_hash,email)
+            sql = "UPDATE Users SET pw = '{}', pw_hash = '{}' WHERE user_uuid = '{}'".format(password,password_hash,uuid)
             cursor.execute(sql)
             db.commit()
             db.close()
             cursor.close()
             return True
         else:
-            db.close()
-            cursor.close()
             return False
 
-    def refresh_token(self,email):
+    def refresh_token(self,uuid):
         token = {
-            'access_token': create_access_token(identity=email)
+            'access_token': create_access_token(identity=uuid)
         }
         return token
 
     def isUser(self,email):
         db = self.connection()
         cursor = db.cursor()
-        sql = "SELECT * FROM users WHERE email = '{}'".format(email)
+        sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
         cursor.execute(sql)
         res = cursor.fetchone()
         db.close()
@@ -257,12 +246,7 @@ class UserModel(InintAPP):
         else:
             return False
     
-    def uploadFiles(self,email):
-        db = self.connection()
-        cursor = db.cursor()
-        sql = "SELECT uuid FROM users WHERE email = '{}'".format(email)
-        cursor.execute(sql)
-        uuid = cursor.fetchone()['uuid']
+    def uploadFiles(self,uuid):
         parser = reqparse.RequestParser()
         parser.add_argument('userIcon', type=FileStorage,location='files',help="userIcon is wrong.")
         img_file = parser.parse_args().get('userIcon')
@@ -293,8 +277,8 @@ class UserModel(InintAPP):
             del uploadFile
             return False
 
-    def member_data(self,email):
-        sql = "SELECT nickname,uuid FROM users WHERE email = '{}'".format(email)
+    def member_data(self,uuid):
+        sql = "SELECT nickname,email FROM Users WHERE user_uuid = '{}'".format(uuid)
         db = self.connection()
         cursor = db.cursor()
         cursor.execute(sql)
@@ -302,8 +286,8 @@ class UserModel(InintAPP):
         user_data = dict()
         res = cursor.fetchone()
         user_data['nickname'] = res['nickname']
-        icon_path = 'imgs/{}/icon/'.format(res['uuid'])
-
+        user_data['email'] = res['email']
+        icon_path = 'imgs/{}/icon/'.format(uuid)
         try:
             files = listdir(icon_path)
         except:

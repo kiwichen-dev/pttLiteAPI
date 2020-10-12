@@ -8,6 +8,8 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_mail import Mail
 from time import time
+import string
+import random
 """
 from flask_uploads import UploadSet, IMAGES, configure_uploads
 """
@@ -65,6 +67,9 @@ class InintAPP():
         pool.get_conn()
         return pool.get_conn()
 
+    def random_user_id(self):
+        return ''.join(random.sample(string.ascii_letters + string.digits, 8))
+
     # def refreshBoards(self,board_name):
     #     db = self.connection()
     #     cursor = db.cursor()
@@ -92,7 +97,7 @@ class App(InintAPP):
         api.add_resource(Index,'/index')
         api.add_resource(All_board)
         api.add_resource(Board,'/board/<string:board_name>')
-        api.add_resource(Article,'/<string:board>/<string:article_number>')
+        api.add_resource(Article,'/<string:board_name>/<string:article_number>')
         # api.add_resource(Article_Left_Join,'/left_join/<string:board>/<string:article_number>')
         # api.add_resource(Register,'/register')
         # api.add_resource(BoardToList,'/boardtolist')
