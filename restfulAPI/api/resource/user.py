@@ -50,10 +50,6 @@ class GetFollowingBoards(UserModel,Resource):
 class Login(UserModel,Resource):
     def post(self):
         parser = reqparse.RequestParser()
-        # parser.add_argument(
-        #     'user_id', type = self.min_length_str(6), required=True,
-        #     help='require user id'
-        # )
         parser.add_argument(
             'email', type=str, required=True, help='required email'
         )
@@ -147,7 +143,7 @@ class Login(UserModel,Resource):
 #             return {'message':'user has been created'}, 201
 
 class ForgotPassword(UserModel,Resource):
-    def get(self):
+    def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'email', type=str, required=True, help='required email'
@@ -165,6 +161,31 @@ class ResetPassword(UserModel,Resource):
             return {'msg':'password changed!'},201
         else:
             return {'msg':'Link has revoked'},401
+
+class ChangePassword(UserModel,Resource):
+    @jwt_required
+    def put(self):
+        uuid = get_jwt_identity()
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            'password', type = self.min_length_str(8), required=True,
+            help='password require and length >= 8'
+        )
+        parser.add_argument(
+            'repeat_password', type = self.min_length_str(8), required=True,
+            help='password require and length >= 8'
+        )
+        data = parser.parse_args()
+        password = data['password']
+        repeat_password = data['repeat_password']
+
+        if password == repeat_password:
+            if self.change_password(uuid,password):
+                return {'msg':'password changed!'},201
+            else:
+                return {'msg':'API error'},500
+        else:
+            return {'msg':'Make sure password equal repeat-password'},400
 
 class Discuss(Resource,UserModel):
     @jwt_required
@@ -198,11 +219,6 @@ class Discuss(Resource,UserModel):
             return {'message':'discussion submit'}, 201
         else:
             return {'message':'Can not find the article'}, 400
-        # if self.vaildate_article(board_name,article_number):
-        #     self.discuss(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
-        #     return {'message':'discussion submit'}, 201
-        # else:
-        #     return {'message':'Can not find the article'}, 400
 
     @jwt_required
     def put(self):
@@ -246,7 +262,7 @@ class Reply(Resource,UserModel,LinkVaildate):
         else:
             return {'message':'Can not find the article'}, 400
 
-class Refresh_token(UserModel,Resource):
+class RefreshToken(UserModel,Resource):
     @jwt_refresh_token_required
     def post(self):
         uuid = get_jwt_identity()

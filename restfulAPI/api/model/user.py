@@ -229,16 +229,43 @@ class UserModel(InintAPP):
             password = data['password']
             password_hash = self.set_password(password)
             uuid = vaild[1]
-            db = self.connection()
-            cursor = db.cursor()
-            sql = "UPDATE Users SET pw = '{}', pw_hash = '{}' WHERE user_uuid = '{}'".format(password,password_hash,uuid)
-            cursor.execute(sql)
-            db.commit()
-            db.close()
-            cursor.close()
-            return True
+            try:
+                sql = "UPDATE Users SET pw = '{}', pw_hash = '{}' WHERE user_uuid = '{}'".format(password,password_hash,uuid)
+                db = self.connection()
+                cursor = db.cursor()
+                cursor.execute(sql)
+                db.commit()
+                isSucess = True
+            except Exception as e:
+                isSucess = False
+                print(e)
+                db.rollback()
+            else:
+                db.close()
+                cursor.close()
+            finally:
+                return isSucess
         else:
             return False
+
+    def change_password(self,uuid,password):
+        password_hash = self.set_password(password)
+        try:
+            sql = "UPDATE Users SET pw = '{}', pw_hash = '{}' WHERE user_uuid = '{}'".format(password,password_hash,uuid)
+            db = self.connection()
+            cursor = db.cursor()
+            cursor.execute(sql)
+            db.commit()
+            isSucess = True
+        except Exception as e:
+            isSucess = False
+            print(e)
+            db.rollback()
+        else:
+            db.close()
+            cursor.close()
+        finally:
+            return isSucess
 
     def refresh_token(self,uuid):
         token = {
