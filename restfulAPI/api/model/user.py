@@ -13,6 +13,7 @@ import os
 import base64
 from os import listdir
 from api.model.boardArticle import LinkVaildate
+from api import mail
 
 class UserModel(InintAPP):
     def min_length_str(self,min_length):
@@ -118,90 +119,133 @@ class UserModel(InintAPP):
     
     def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
         if LinkVaildate.vaildate_article(board_name,article_number):
-            sql = \
-            "INSERT INTO ArticleDiscussions(\
-                from_pttLite,\
-                board_name,\
-                article_number,\
-                respone_type,\
-                respone_user_id,\
-                discussion,\
-                respone_user_ip,\
-                create_time,\
-                last_update\
-                )\
-            VALUES(true,'{}','{}','{}','{}','{}','{}',NOW(),NOW())".format(
-                board_name,
-                article_number,
-                respone_type,
-                respone_user_id,
-                discussion,
-                respone_user_ip
-            )
-            db = self.connection()
-            cursor = db.cursor()
-            cursor.execute(sql)
-            db.commit()
-            db.close()
-            cursor.close()
-            return True
+            try:
+                sql = \
+                "INSERT INTO ArticleDiscussions(\
+                    from_pttLite,\
+                    board_name,\
+                    article_number,\
+                    respone_type,\
+                    respone_user_id,\
+                    discussion,\
+                    respone_user_ip,\
+                    create_time,\
+                    last_update\
+                    )\
+                VALUES(true,'{}','{}','{}','{}','{}','{}',NOW(),NOW())".format(
+                    board_name,
+                    article_number,
+                    respone_type,
+                    respone_user_id,
+                    discussion,
+                    respone_user_ip
+                )
+                db = self.connection()
+                cursor = db.cursor()
+                cursor.execute(sql)
+                db.commit()
+                isSucess = True
+            except Exception as e:
+                print(e)
+                isSucess = False
+                try:
+                    db.rollback()
+                    db.close()
+                    cursor.close()
+                except Exception as e:
+                    print(e)
+                    return isSucess
+            else:
+                db.close()
+                cursor.close()
+            finally:
+                return isSucess
         else:
             return False
 
     def reply(self,articleDiscussions_nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip):
-        sql = \
-        "INSERT INTO ReplyFromPttLite(\
-            articleDiscussions_nu,\
-            board_name,\
-            article_number,\
-            respone_type,\
-            respone_user_id,\
-            reply,\
-            respone_user_ip,\
-            create_time,\
-            last_update\
-            )\
-        VALUES({},'{}','{}','{}','{}','{}','{}',now(),now())".format(
-            articleDiscussions_nu,
-            board_name,
-            article_number,
-            respone_type,
-            respone_user_id,
-            reply,
-            respone_user_ip
-        )
-        db = self.connection()
-        cursor = db.cursor()
-        cursor.execute(sql)
-        db.commit()
-        db.close()
-        cursor.close()
+        if LinkVaildate.vaildate_discussion:
+            try:
+                sql = \
+                "INSERT INTO ReplyFromPttLite(\
+                    articleDiscussions_nu,\
+                    board_name,\
+                    article_number,\
+                    respone_type,\
+                    respone_user_id,\
+                    reply,\
+                    respone_user_ip,\
+                    create_time,\
+                    last_update\
+                    )\
+                VALUES({},'{}','{}','{}','{}','{}','{}',now(),now())".format(
+                    articleDiscussions_nu,
+                    board_name,
+                    article_number,
+                    respone_type,
+                    respone_user_id,
+                    reply,
+                    respone_user_ip
+                )
+                db = self.connection()
+                cursor = db.cursor()
+                cursor.execute(sql)
+                db.commit()
+                isSucess = True
+            except Exception as e:
+                print(e)
+                isSucess = False
+                try:
+                    db.rollback()
+                    db.close()
+                    cursor.close()
+                except Exception as e:
+                    print(e)
+                    return isSucess
+            else:
+                db.close()
+                cursor.close()
+            finally:
+                return isSucess
+        else:
+            return False
     
     def forgot_password(self,email):
-        db = self.connection()
-        cursor = db.cursor()
-        sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
-        cursor.execute(sql)
-        if cursor.fetchone():
-            access_token = create_access_token(identity=email)
-            msg_title = 'PTT Lite 重設密碼'
-            msg_sender = 'kiwichen.dev@gmail.com'
-            msg_recipients = [str(email)]
-            #msg_body = "密碼重設連結:{}".format("https://pttlite.cloudns.asia/resetpassword/" + str(access_token) )
-            msg_html = '<a href="{}" >點我重設密碼</a>'.format("https://pttlite.ddns.net/resetpassword/" + str(access_token) )
-            msg = Message(msg_title,
-                        sender=msg_sender,
-                        recipients=msg_recipients)
-            #msg.body = msg_body
-            msg.html = msg_html
-            self.mail.send(msg)
-            db.close()
-            cursor.close()
-            return True
+        try:
+            sql = "SELECT user_uuid FROM Users WHERE email = '{}'".format(email)
+            db = self.connection()
+            cursor = db.cursor()
+            cursor.execute(sql)
+            uuid = cursor.fetchone()['user_uuid']
+            isSucess = True
+        except Exception as e:
+            isSucess = False
+            try:
+                db.rollback()
+                db.close()
+                cursor.close()
+            except Exception as e:
+                print(e)
+                return isSucess
         else:
             db.close()
             cursor.close()
-            return False
+            if uuid:
+                access_token = create_access_token(identity=uuid)
+                msg_title = 'PTT Lite 重設密碼'
+                msg_sender = 'kiwichen.dev@gmail.com'
+                msg_recipients = [str(email)]
+                #msg_body = "密碼重設連結:{}".format("https://pttlite.cloudns.asia/resetpassword/" + str(access_token) )
+                msg_html = '<a href="{}" >點我重設密碼</a>'.format("https://pttlite.ddns.net/resetpassword/" + str(access_token) )
+                msg = Message(msg_title,
+                            sender=msg_sender,
+                            recipients=msg_recipients)
+                #msg.body = msg_body
+                msg.html = msg_html
+                mail.send(msg)
+                return True
+            else:
+                return False
     
     def vaildate_token(self,token):
         uuid = decode_token(token)['identity']
