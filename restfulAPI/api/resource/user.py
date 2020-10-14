@@ -1,9 +1,9 @@
 from flask_restful import Resource, reqparse
 from flask import request, current_app, jsonify
-from api import InintAPP,check_if_token_in_blacklist,blacklist
+from api import InitAPP,check_if_token_in_blacklist,blacklist
 import json
 from api.model.user import UserModel
-from api.model.boardArticle import LinkVaildate
+from api.model.boardArticle import LinkValidate
 from flask_jwt_extended import (
     JWTManager, jwt_required, get_jwt_identity,
     create_access_token, create_refresh_token,
@@ -18,24 +18,14 @@ class FollowBoard(UserModel,Resource):
     def post(self,board_name):
         uuid = get_jwt_identity()
         res = self.follow(uuid,board_name)
-        if res['respon_code'] == self.request_sucess:
-            return {'msg':'sucess'},201
-        elif res['respon_code'] == self.request_not_found:
-            return {'msg':'Board not found'},404
-        elif res['respon_code'] == self.mysql_offline:
-            return {'msg':'Board not found'},500
+        return self.analysis_return(res)
 
 class FollowArticle(UserModel,Resource):
     @jwt_required 
     def post(self,board_name,article_number):
         uuid = get_jwt_identity()
         res = self.follow(uuid,board_name,article_number)
-        if res['respon_code'] == self.request_sucess:
-            return {'msg':'sucess'},201
-        elif res['respon_code'] == self.request_not_found:
-            return {'msg':'Article not found'},404
-        elif res['respon_code'] == self.mysql_offline:
-            return {'msg':'Article not found'},500
+        return self.analysis_return(res)
 
 class GetFollowingArticles(UserModel,Resource):
     @jwt_required
@@ -67,29 +57,25 @@ class Login(UserModel,Resource):
         email = data['email']
         password = data['password']
 
-        if self.isUser(email):
-            vaildate = self.vaildate_password(email,password)
-            if vaildate[0]:
-                uuid = vaildate[1]
+        is_user = self.isUser(email)
+        if is_user['respon_code'] == self.request_sucess:
+            res = self.validate_password(email,password)
+            if res['respon_code'] == self.valid:
+                uuid = res['respon_content']
                 self.login_records(uuid)
                 return {
                     'access_token': create_access_token(identity=uuid),
                     'refresh_token': create_refresh_token(identity=uuid)
                 }, 200
+            elif res['respon_code'] == self.invalid:
+                return {'msg':'Wrong email or password '},401
+            elif res['respon_code'] == self.mysql_offline:
+                return {'msg':'MySQL offline'},500
+            elif res['respon_code'] == self.mysql_error:
+                return {'msg':'MySQL error'},500
             else:
-                return {'msg':'wrong of email or password '},401
-        else:
-            # parser = reqparse.RequestParser()
-            # parser.add_argument(
-            #     'email', type=str, required=True, help='required email'
-            # )
-            # parser.add_argument(
-            #     'password', type = self.min_length_str(8), required=True,
-            #     help='password error'
-            # )
-            # data = parser.parse_args()
-            # email = data['email']
-            # password = data['password']
+                return {'msg':'Get an error'},500
+        elif is_user['respon_code'] == self.request_not_found:
             user_id = self.random_user_id
             db = self.connection()
             cursor = db.cursor()
@@ -106,6 +92,8 @@ class Login(UserModel,Resource):
                     'access_token': create_access_token(identity=uuid),
                     'refresh_token': create_refresh_token(identity=uuid)
                 }, 201
+        else:
+            return self.analysis_return(is_user)
 
 # class Protected(Resource):
 #     @jwt_required
@@ -220,21 +208,8 @@ class Discuss(UserModel,Resource):
         respone_user_id = self.get_user_by_uuid(uuid)['nickname']
         discussion = data['discussion']
         respone_user_ip = data['respone_user_ip']
-
         res = self.discuss_or_reply(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
-        if res['respon_code'] == self.request_sucess:
-            return {'msg':'discussion submit'}, 201
-
-        elif res['respon_code'] == self.request_not_found:
-            return {'msg':'Can not find the article'}, 404
-
-        elif res['respon_code'] == self.mysql_offline:
-            return {'msg':'MySQL offline'},500
-
-        elif res['respon_code'] == self.mysql_error:
-            return {'msg':'MySQL error'},500
-        else:
-            return {'msg':'Got error'},500
+        return self.analysis_return(res)
 
     @jwt_required
     def put(self):
@@ -271,21 +246,8 @@ class Reply(UserModel,Resource):
         respone_user_id = self.get_user_by_uuid(uuid)['nickname']
         reply = data['reply']
         respone_user_ip = data['respone_user_ip']
-
         res = self.discuss_or_reply(nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip)
-        if res['respon_code'] == self.request_sucess:
-            return {'msg':'discussion submit'},201
-
-        elif res['respon_code'] == self.request_not_found:
-            return {'msg':'Can not find the article'},404
-
-        elif res['respon_code'] == self.mysql_offline:
-            return {'msg':'MySQL offline'},500
-
-        elif res['respon_code'] == self.mysql_error:
-            return {'msg':'MySQL error'},500
-        else:
-            return {'msg':'Got error'},500
+        return self.analysis_return(res)
 
 class RefreshToken(UserModel,Resource):
     @jwt_refresh_token_required

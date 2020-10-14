@@ -29,13 +29,15 @@ def check_if_token_in_blacklist(decrypted_token):
     jti = decrypted_token['jti']
     return jti in blacklist
 
-class InintAPP():
+class InitAPP():
     def __init__(self):
         self.mysql_offline = int(0)
         self.mysql_is_working = int(1)
         self.mysql_error = int(2)
         self.request_sucess = int(3)
         self.request_not_found = int(4)
+        self.valid = int(5)
+        self.invalid = int(6)  
         self.mysql_respon = dict()
         self.mysql_respon['respon_code'] = None
         self.mysql_respon['respon_content'] = None
@@ -62,6 +64,18 @@ class InintAPP():
     def random_user_id(self):
         return ''.join(random.sample(string.ascii_letters + string.digits, 8))
 
+    def analysis_return(self,res):
+        if res['respon_code'] == self.request_sucess:
+            return {'msg':'Sucess'},201
+        elif res['respon_code'] == self.request_not_found:
+            return {'msg':'Not found'},404
+        elif res['respon_code'] == self.mysql_offline:
+            return {'msg':'MySQL offline'},500
+        elif res['respon_code'] == self.mysql_error:
+            return {'msg':'MySQL error'},500
+        else:
+            return {'msg':'Get an error'},500
+
     # def refreshBoards(self,board_name):
     #     db = self.connection()
     #     cursor = db.cursor()
@@ -83,7 +97,7 @@ from api.resource.user import Login, FollowBoard, FollowArticle, GetFollowingArt
     Reply, ForgotPassword, ResetPassword,ChangePassword, RefreshToken, UploadImg, MemberCenter, LogoutAccessToken, LogoutRefreshToken
 from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board, ArticleContent
 
-class App(InintAPP):
+class App(InitAPP):
     @staticmethod
     def create_app():  # 使用靜態方法，可省略實體化，因此該方法不用self
         api.add_resource(Index, '/index')

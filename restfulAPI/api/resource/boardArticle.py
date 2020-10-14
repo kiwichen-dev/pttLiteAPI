@@ -1,11 +1,11 @@
 from flask import jsonify, request, current_app
-from api import InintAPP
-from api.model.boardArticle import LinkVaildate
+from api import InitAPP
+from api.model.boardArticle import LinkValidate
 from flask_restful import Resource, reqparse
 import re
 
 
-class Index(InintAPP, Resource):
+class Index(LinkValidate, Resource):
     def get(self):
         index = dict()
         distinct_board_name_top = list()
@@ -33,7 +33,7 @@ class Index(InintAPP, Resource):
         else:
             return {'msg':'MySQL offline'},500
 
-class Board(LinkVaildate, Resource):
+class Board(LinkValidate, Resource):
     def get(self, board_name, order_by='create_time', limit='200'):
         res = self.is_link(board_name)
         if res['respon_code'] == self.request_sucess:
@@ -54,7 +54,7 @@ class Board(LinkVaildate, Resource):
         else:
             return {'msg':'Get an error'},500
 
-class AllBoards(LinkVaildate, Resource):
+class AllBoards(LinkValidate, Resource):
     def get(self):
         db = self.connection()
         if db:
@@ -70,7 +70,7 @@ class AllBoards(LinkVaildate, Resource):
         else:
             return {'msg':'MySQL offline'},500
 
-class ArticlePage(LinkVaildate, Resource):
+class ArticlePage(LinkValidate, Resource):
     def get(self, board_name, article_number):
         res = self.is_link(board_name,article_number)
         if res['respon_code'] == self.request_sucess:
@@ -126,7 +126,7 @@ def search():
         cursor.close()
         return jsonify('search.html', searchingResult=searchingResult)
 
-class BoardToList(InintAPP, Resource):
+class BoardToList(LinkValidate, Resource):
     def get(self):
         db = self.connection()
         cursor = db.cursor()
@@ -142,7 +142,7 @@ class BoardToList(InintAPP, Resource):
         cursor.close()
         return jsonify(board_to_list)
 
-class Article_Left_Join(InintAPP, Resource):
+class Article_Left_Join(LinkValidate, Resource):
     def get(self, board, article_number):
         db = self.connection()
         cursor = db.cursor()
@@ -197,7 +197,7 @@ class Article_Left_Join(InintAPP, Resource):
             cursor.close()
             return {'message': 'article not found'}, 404
 
-class ArticleContent(InintAPP,Resource):
+class ArticleContent(LinkValidate,Resource):
     def get(self,board_name,article_number):
         db = self.connection()
         if db:

@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
-from api import InintAPP
+from api import InitAPP
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity,decode_token,get_raw_jwt
@@ -12,10 +12,10 @@ from werkzeug.datastructures import FileStorage
 import os
 import base64
 from os import listdir
-from api.model.boardArticle import LinkVaildate
+from api.model.boardArticle import LinkValidate
 from api import mail
 
-class UserModel(LinkVaildate):
+class UserModel(LinkValidate):
     def min_length_str(self,min_length):
         def validate(s):
             if s is None:
@@ -31,20 +31,33 @@ class UserModel(LinkVaildate):
     def set_password(self,password):
         return generate_password_hash(password)
 
-    def vaildate_password(self,email,password):
+    def validate_password(self,email,password):
         db = self.connection()
-        cursor = db.cursor()
-        sql = "SELECT pw_hash,user_uuid FROM Users WHERE email = '{}'".format(email)
-        cursor.execute(sql)
-        res = cursor.fetchone()
-        password_hash = res['pw_hash']
-        uuid = res['user_uuid']
-        db.commit()
-        cursor.close()
-        if check_password_hash(password_hash,password):
-            return True,uuid
+        if db:
+            try:
+                sql = "SELECT pw_hash,user_uuid FROM Users WHERE email = '{}'".format(email)
+                cursor = db.cursor()
+                cursor.execute(sql)
+                res = cursor.fetchone()
+                password_hash = res['pw_hash']
+                uuid = res['user_uuid']
+                db.close()
+                cursor.close()
+            except:
+                db.rollback()
+                self.mysql_respon['respon_code'] = self.mysql_error
+                return self.mysql_respon
+            else:
+                if check_password_hash(password_hash,password):
+                    self.mysql_respon['respon_code'] = self.valid
+                    self.mysql_respon['respon_content'] = uuid
+                    return self.mysql_respon
+                else:
+                    self.mysql_respon['respon_code'] = self.invalid
+                    return self.mysql_respon
         else:
-            return False,None
+            self.mysql_respon['respon_code'] = self.mysql_offline
+            return self.mysql_respon
 
     def get_user_data(self,email):
         sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
@@ -86,15 +99,13 @@ class UserModel(LinkVaildate):
                 try:
                     cursor.execute(sql)
                     db.commit()
-                except:
-                    db.rollback()
                     db.close()
                     cursor.close()
+                except:
+                    db.rollback()
                     res['respon_code'] == self.mysql_error
                     return res
                 else:
-                    db.close()
-                    cursor.close()
                     return res
             else:
                 res['respon_code'] == self.mysql_offline
@@ -243,7 +254,6 @@ class UserModel(LinkVaildate):
                     res['respon_code'] == self.mysql_error
                     return res
                 else:
-                    print('ok')
                     db.close()
                     cursor.close()
                     return res
@@ -254,7 +264,7 @@ class UserModel(LinkVaildate):
     
     # def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
     #     db = self.connection()
-    #     if LinkVaildate.vaildate_article(board_name,article_number) == self.request_sucess:
+    #     if LinkValidate.vaildate_article(board_name,article_number) == self.request_sucess:
     #         if db:
     #             sql = \
     #             "INSERT INTO ArticleDiscussions(\
@@ -286,7 +296,7 @@ class UserModel(LinkVaildate):
 
     # def reply(self,articleDiscussions_nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip):
     #     db = self.connection()
-    #     res = LinkVaildate.vaildate_discussion(articleDiscussions_nu,board_name,article_number)
+    #     res = LinkValidate.vaildate_discussion(articleDiscussions_nu,board_name,article_number)
     #     if res == self.request_sucess:
     #         if db:
     #             sql = \
@@ -433,16 +443,28 @@ class UserModel(LinkVaildate):
 
     def isUser(self,email):
         db = self.connection()
-        cursor = db.cursor()
-        sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
-        cursor.execute(sql)
-        res = cursor.fetchone()
-        db.close()
-        cursor.close()   
-        if res:
-            return True
+        if db:
+            try:
+                cursor = db.cursor()
+                sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
+                cursor.execute(sql)
+                res = cursor.fetchone()
+                db.close()
+                cursor.close()
+            except:
+                db.rollback()
+                self.mysql_respon['respon_code'] = self.mysql_error
+                return self.mysql_respon
+            else:
+                if res:
+                    self.mysql_respon['respon_code'] = self.request_sucess
+                    return self.mysql_respon
+                else:
+                    self.mysql_respon['respon_code'] = self.request_not_found
+                    return self.mysql_respon
         else:
-            return False
+            self.mysql_respon['respon_code'] = self.mysql_offline
+            return self.mysql_respon
     
     def uploadFiles(self,uuid):
         parser = reqparse.RequestParser()

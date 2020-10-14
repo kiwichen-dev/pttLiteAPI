@@ -1,7 +1,7 @@
 from datetime import datetime
 import time
 from flask import current_app
-from api import InintAPP
+from api import InitAPP
 
 """
 class Category(db.Model):
@@ -64,7 +64,7 @@ class Pushcount():
         self.__neutral = list()
         self.__bad = list()
 
-class LinkVaildate(InintAPP):
+class LinkValidate(InitAPP):
     def is_link(self,*args):
         if len(args) == int(1):
             sql = "SELECT * FROM Category WHERE board_name = '{}'".format(args[0])
@@ -92,7 +92,7 @@ class LinkVaildate(InintAPP):
             return self.mysql_offline
 
     # def vaildate_board(self,board_name):
-    #     db = InintAPP.connection()
+    #     db = InitAPP.connection()
     #     if db:
     #         sql = "SELECT * FROM Category WHERE board_name = '{}'".format(board_name)
     #         cursor = db.cursor()
@@ -111,7 +111,7 @@ class LinkVaildate(InintAPP):
     #         return self.__mysql_respon
 
     # def vaildate_article(self,board_name,article_number):
-    #     db = InintAPP.connection()
+    #     db = InitAPP.connection()
     #     if db:
     #         sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
     #         cursor = db.cursor()
@@ -130,7 +130,7 @@ class LinkVaildate(InintAPP):
     #         return self.__mysql_respon
 
     # def vaildate_discussion(self,nu,board_name,article_number):
-    #     db = InintAPP.connection()
+    #     db = InitAPP.connection()
     #     if db:
     #         sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(nu,board_name,article_number)
     #         cursor = db.cursor()
