@@ -195,3 +195,13 @@ class Article_Left_Join(InintAPP, Resource):
             db.close()
             cursor.close()
             return {'message': 'article not found'}, 404
+
+class ArticleContent(InintAPP,Resource):
+    def get(self,board_name,article_number):
+        db = self.connection()
+        if db:
+            sql = "SELECT content FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
+            cursor = db.cursor()
+            cursor.execute(sql)
+            res = cursor.fetchone()['content']
+            return jsonify(res)

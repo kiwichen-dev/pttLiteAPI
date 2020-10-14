@@ -78,7 +78,7 @@ class InintAPP():
 
 from api.resource.user import Login, FollowBoard, FollowArticle, GetFollowingArticles, GetFollowingBoards, Discuss,\
     Reply, ForgotPassword, ResetPassword,ChangePassword, RefreshToken, UploadImg, MemberCenter, LogoutAccessToken, LogoutRefreshToken
-from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board
+from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board, ArticleContent
 
 class App(InintAPP):
     @staticmethod
@@ -87,6 +87,7 @@ class App(InintAPP):
         api.add_resource(AllBoards,'/boards')
         api.add_resource(Board, '/board/<string:board_name>')
         api.add_resource(ArticlePage, '/<string:board_name>/<string:article_number>')
+        api.add_resource(ArticleContent,'/article_content/<string:board_name>/<string:article_number>')
         # api.add_resource(Article_Left_Join,'/left_join/<string:board>/<string:article_number>')
         # api.add_resource(Register,'/register')
         # api.add_resource(BoardToList,'/boardtolist')

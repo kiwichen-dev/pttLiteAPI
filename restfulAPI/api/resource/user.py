@@ -334,3 +334,13 @@ class LogoutRefreshToken(UserModel,Resource):
         jti = get_raw_jwt()['jti']
         blacklist.add(jti)
         return {"msg": "Successfully logged out"}, 200
+
+class ArticleConten(UserModel,Resource):
+    def get(self):
+        db = self.connection()
+        if db:
+            sql = "SELECT content FROM Articles WHERE board_name = '{} AND article_number = '{}''".format(board_name,article_name)
+            cursor = db.cursor()
+            cursor.execute(sql)
+            res = cursor.fetchone()['content']
+            return jsonify(res)
