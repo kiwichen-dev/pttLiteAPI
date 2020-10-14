@@ -65,49 +65,85 @@ class Pushcount():
         self.__bad = list()
 
 class LinkVaildate(InintAPP):
-    @staticmethod
-    def vaildate_board(board_name):
-        sql = "SELECT * FROM Category WHERE board_name = '{}'".format(board_name)
-        db = InintAPP.connection()
-        cursor = db.cursor()
-        cursor.execute(sql)
-        res = cursor.fetchone()
-        db.close()
-        cursor.close()
-        if res:
-            return True
+    def is_link(self,*args):
+        if len(args) == int(1):
+            sql = "SELECT * FROM Category WHERE board_name = '{}'".format(args[0])
+        elif len(args) == int(2):
+            sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(args[0],args[1])
+        elif len(args) == int(3):
+            sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(args[0],args[1],args[2])
         else:
-            return False
-
-    @staticmethod
-    def vaildate_article(board_name,article_number):
-        db = InintAPP.connection()
+            return self.mysql_error
+        db = self.connection()
         if db:
-            sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
             cursor = db.cursor()
             cursor.execute(sql)
             res = cursor.fetchone()
             db.close()
             cursor.close()
             if res:
-                return 3
+                self.mysql_respon['respon_code'] = self.request_sucess
+                self.mysql_respon['respon_content'] = res
+                return self.mysql_respon
             else:
-                return 4
+                self.mysql_respon['respon_code'] = self.request_not_found
+                return self.mysql_respon
         else:
-            return 0
+            return self.mysql_offline
 
-    @staticmethod
-    def vaildate_discussion(nu,board_name,article_number):
-        db = InintAPP.connection()
-        if db:
-            sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(nu,board_name,article_number)
-            cursor = db.cursor()
-            cursor.execute(sql)
-            res = cursor.fetchone()
-            db.close()
-            cursor.close()
-            if res:
-                return 3
-            else:
-                return 4
-        return 0
+    # def vaildate_board(self,board_name):
+    #     db = InintAPP.connection()
+    #     if db:
+    #         sql = "SELECT * FROM Category WHERE board_name = '{}'".format(board_name)
+    #         cursor = db.cursor()
+    #         cursor.execute(sql)
+    #         res = cursor.fetchone()
+    #         db.close()
+    #         cursor.close()
+    #         if res:
+    #             self.mysql_respon['respon_code'] = self.request_sucess
+    #             self.mysql_respon['respon_content'] = res
+    #             return self.mysql_respon
+    #         else:
+    #             self.mysql_respon['respon_code'] = self.request_not_found
+    #             return self.mysql_respon
+    #     else:
+    #         return self.__mysql_respon
+
+    # def vaildate_article(self,board_name,article_number):
+    #     db = InintAPP.connection()
+    #     if db:
+    #         sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
+    #         cursor = db.cursor()
+    #         cursor.execute(sql)
+    #         res = cursor.fetchone()
+    #         db.close()
+    #         cursor.close()
+    #         if res:
+    #             self.mysql_respon['respon_code'] = self.request_sucess
+    #             self.mysql_respon['respon_content'] = res
+    #             return self.mysql_respon
+    #         else:
+    #             self.mysql_respon['respon_code'] = self.request_not_found
+    #             return self.mysql_respon
+    #     else:
+    #         return self.__mysql_respon
+
+    # def vaildate_discussion(self,nu,board_name,article_number):
+    #     db = InintAPP.connection()
+    #     if db:
+    #         sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(nu,board_name,article_number)
+    #         cursor = db.cursor()
+    #         cursor.execute(sql)
+    #         res = cursor.fetchone()
+    #         db.close()
+    #         cursor.close()
+    #         if res:
+    #             self.mysql_respon['respon_code'] = self.request_sucess
+    #             self.mysql_respon['respon_content'] = res
+    #             return self.mysql_respon
+    #         else:
+    #             self.mysql_respon['respon_code'] = self.request_not_found
+    #             return self.mysql_respon
+    #     else:
+    #         return self.__mysql_respon

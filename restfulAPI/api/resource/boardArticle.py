@@ -1,6 +1,6 @@
 from flask import jsonify, request, current_app
 from api import InintAPP
-#from api.model.boardArticle import Category,Article,Article_discuss
+from api.model.boardArticle import LinkVaildate
 from flask_restful import Resource, reqparse
 import re
 
@@ -33,26 +33,28 @@ class Index(InintAPP, Resource):
         else:
             return {'msg':'MySQL offline'},500
 
-class News(InintAPP, Resource):
-    def get(self):
-        pass
-
-class Board(InintAPP, Resource):
+class Board(LinkVaildate, Resource):
     def get(self, board_name, order_by='create_time', limit='200'):
-        db = self.connection()
-        if db:
-            sql = "SELECT * FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name, order_by, limit)
-            cursor = db.cursor()
-            cursor.execute(sql)
-            package = dict()
-            package['board'] = cursor.fetchall()
-            db.close()
-            cursor.close()
-            return jsonify(package)
+        res = self.is_link(board_name)
+        if res['respon_code'] == self.request_sucess:
+            db = self.connection()
+            if db:
+                sql = "SELECT * FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
+                cursor = db.cursor()
+                cursor.execute(sql)
+                package = dict()
+                package['board'] = cursor.fetchall()
+                db.close()
+                cursor.close()
+                return jsonify(package)
+            else:
+                return {'msg':'MySQL offline'},500
+        elif res['respon_code'] == self.request_not_found:
+            return {'msg': 'Board not found'}, 404
         else:
-            return {'msg':'MySQL offline'},500
+            return {'msg':'Get an error'},500
 
-class AllBoards(InintAPP, Resource):
+class AllBoards(LinkVaildate, Resource):
     def get(self):
         db = self.connection()
         if db:
@@ -66,17 +68,16 @@ class AllBoards(InintAPP, Resource):
             cursor.close()
             return jsonify(package)
         else:
-            return {'msg':'API error'},500
+            return {'msg':'MySQL offline'},500
 
-class ArticlePage(InintAPP, Resource):
+class ArticlePage(LinkVaildate, Resource):
     def get(self, board_name, article_number):
-        db = self.connection()
-        if db:
-            sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name, article_number)
-            cursor = db.cursor()
-            cursor.execute(sql)
-            article_fetch = cursor.fetchall()[0]
-            if article_fetch:
+        res = self.is_link(board_name,article_number)
+        if res['respon_code'] == self.request_sucess:
+            db = self.connection()
+            if db:
+                cursor = db.cursor()
+                article_fetch = res['respon_content']
                 sql = "SELECT nu,from_pttLite,respone_type,respone_user_id,discussion,respone_user_ip,create_time FROM ArticleDiscussions WHERE article_number ='{}'".format(article_number)
                 cursor.execute(sql)
                 article_discussions = cursor.fetchall()
@@ -105,11 +106,11 @@ class ArticlePage(InintAPP, Resource):
                 cursor.close()
                 return jsonify(article_page)
             else:
-                db.close()
-                cursor.close()
-                return {'msg': 'article not found'}, 404
+                return {'msg':'MySQL offline'},500
+        elif res['respon_code'] == self.request_not_found:
+            return {'msg': 'Article not found'}, 404
         else:
-            return {'msg':'MySQL offline'},500
+            return {'msg':'Get an error'},500
 
 def search():
     cursor = db.cursor()
@@ -200,7 +201,7 @@ class ArticleContent(InintAPP,Resource):
     def get(self,board_name,article_number):
         db = self.connection()
         if db:
-            sql = "SELECT content FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
+            sql = "SELECT content FROM Articles WHERE board_name = '{}' AND article_number = '{}' ".format(board_name,article_number)
             cursor = db.cursor()
             cursor.execute(sql)
             res = cursor.fetchone()['content']

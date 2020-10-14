@@ -15,7 +15,7 @@ from os import listdir
 from api.model.boardArticle import LinkVaildate
 from api import mail
 
-class UserModel(InintAPP):
+class UserModel(LinkVaildate):
     def min_length_str(self,min_length):
         def validate(s):
             if s is None:
@@ -66,34 +66,97 @@ class UserModel(InintAPP):
         cursor.close()
         return res
 
-    def follow_board(self,uuid,board_name):
-        if LinkVaildate.vaildate_board(board_name):
-            # sql = "INSERT INTO FollowingBoards(user_uuid,board_name,create_time) VALUES( (SELECT user_uuid FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
-            sql = "INSERT INTO FollowingBoards (user_uuid,board_name,create_time) VALUES ('{}','{}',now())".format(uuid,board_name)
-            db = self.connection()
-            cursor = db.cursor()
-            cursor.execute(sql)
-            db.commit()
-            cursor.close()
-            return True
+    def follow(self,*args):
+        if len(args) == int(1):
+            sql = ''
+        elif len(args) == int(2):
+            sql = "INSERT INTO FollowingBoards (user_uuid,board_name,create_time) VALUES ('{}','{}',now())".format(args[0],args[1])
+            res = self.is_link(args[1])
+        elif len(args) == int(3):
+            article_url = "/" + args[1] + "/" + args[2]
+            sql = "INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(args[0],article_url,args[1],args[2])
+            res = self.is_link(args[1],args[2])
         else:
-            return False
+            return self.mysql_error
 
-    def follow_article(self,uuid,board_name,article_number):
-        if LinkVaildate.vaildate_article(board_name,article_number):
-            article_url = "/" + board_name + "/" + article_number
-            # sql = "INSERT INTO FollowingArticles(id,article_url,board_name,article_number,create_time)\
-            #      VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
-            sql = "INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(uuid,article_url,board_name,article_number)
+        if res['respon_code'] == self.request_sucess:
             db = self.connection()
-            cursor = db.cursor()
-            cursor.execute(sql)
-            db.commit()
-            db.close()
-            cursor.close()
-            return True
+            if db:
+                cursor = db.cursor()
+                try:
+                    cursor.execute(sql)
+                    db.commit()
+                except:
+                    db.rollback()
+                    db.close()
+                    cursor.close()
+                    res['respon_code'] == self.mysql_error
+                    return res
+                else:
+                    db.close()
+                    cursor.close()
+                    return res
+            else:
+                res['respon_code'] == self.mysql_offline
+                return res
         else:
-            return False
+            return res
+
+    # def follow_board(self,uuid,board_name):
+    #     res = self.is_link(board_name)
+    #     if res['respon_code'] == self.request_sucess:
+    #         # sql = "INSERT INTO FollowingBoards(user_uuid,board_name,create_time) VALUES( (SELECT user_uuid FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
+    #         sql = "INSERT INTO FollowingBoards (user_uuid,board_name,create_time) VALUES ('{}','{}',now())".format(uuid,board_name)
+    #         db = self.connection()
+    #         if db:
+    #             cursor = db.cursor()
+    #             try:
+    #                 cursor.execute(sql)
+    #                 db.commit()
+    #             except:
+    #                 db.rollback()
+    #                 db.close()
+    #                 cursor.close()
+    #                 res['respon_code'] == self.mysql_error
+    #                 return res
+    #             else:
+    #                 db.close()
+    #                 cursor.close()
+    #                 return res
+    #         else:
+    #             res['respon_code'] == self.mysql_offline
+    #             return res
+    #     else:
+    #         return res
+
+    # def follow_article(self,uuid,board_name,article_number):
+    #     res = self.is_link(board_name,article_number)
+    #     if res['respon_code'] == self.request_sucess:
+    #         article_url = "/" + board_name + "/" + article_number
+    #         # sql = "INSERT INTO FollowingArticles(id,article_url,board_name,article_number,create_time)\
+    #         #      VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
+    #         sql = "INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(uuid,article_url,board_name,article_number)
+    #         db = self.connection()
+    #         if db:
+    #             cursor = db.cursor()
+    #             try:
+    #                 cursor.execute(sql)
+    #                 db.commit()
+    #             except:
+    #                 db.rollback()
+    #                 db.close()
+    #                 cursor.close()
+    #                 res['respon_code'] == self.mysql_error
+    #                 return res
+    #             else:
+    #                 db.close()
+    #                 cursor.close()
+    #                 return res
+    #         else:
+    #             res['respon_code'] == self.mysql_offline
+    #             return res
+    #     else:
+    #         return res
 
     def get_following_boards(self,uuid):
         # sql = "SELECT board_name,create_time FROM FollowingBoards WHERE user_uuid = (SELECT id FROM users WHERE email ='{}')".format(email)
@@ -116,11 +179,9 @@ class UserModel(InintAPP):
         db.close()
         cursor.close()
         return res
-    
-    def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
-        db = self.connection()
-        if LinkVaildate.vaildate_article(board_name,article_number) == self.request_sucess:
-            if db:
+
+    def discuss_or_reply(self,*args):
+        if len(args) == int(6):
                 sql = \
                 "INSERT INTO ArticleDiscussions(\
                     from_pttLite,\
@@ -134,26 +195,15 @@ class UserModel(InintAPP):
                     last_update\
                     )\
                 VALUES(true,'{}','{}','{}','{}','{}','{}',NOW(),NOW())".format(
-                    board_name,
-                    article_number,
-                    respone_type,
-                    respone_user_id,
-                    discussion,
-                    respone_user_ip
+                    args[0],
+                    args[1],
+                    args[2],
+                    args[3],
+                    args[4],
+                    args[5]
                 )
-                cursor = db.cursor()
-                cursor.execute(sql)
-                db.commit()
-                return self.request_sucess
-            else:
-                return self.mysql_offline
-        return self.request_not_found
-
-    def reply(self,articleDiscussions_nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip):
-        db = self.connection()
-        res = LinkVaildate.vaildate_discussion(articleDiscussions_nu,board_name,article_number)
-        if res == self.request_sucess:
-            if db:
+                res = self.is_link(args[0],args[1])
+        elif len(args) == int(7):
                 sql = \
                 "INSERT INTO ReplyFromPttLite(\
                     articleDiscussions_nu,\
@@ -166,27 +216,112 @@ class UserModel(InintAPP):
                     create_time,\
                     last_update\
                     )\
-                VALUES({},'{}','{}','{}','{}','{}','{}',now(),now())".format(
-                    articleDiscussions_nu,
-                    board_name,
-                    article_number,
-                    respone_type,
-                    respone_user_id,
-                    reply,
-                    respone_user_ip
+                VALUES({},'{}','{}','{}','{}','{}','{}',NOW(),NOW())".format(
+                    args[0],
+                    args[1],
+                    args[2],
+                    args[3],
+                    args[4],
+                    args[5],
+                    args[6]
                 )
-                db = self.connection()
+                res = self.is_link(args[0],args[1],args[2])
+        else:
+            return self.mysql_error
+
+        if res['respon_code'] == self.request_sucess:
+            db = self.connection()
+            if db:
                 cursor = db.cursor()
-                cursor.execute(sql)
-                db.commit()
-                return self.request_sucess
-            return self.mysql_offline
+                try:
+                    cursor.execute(sql)
+                    db.commit()
+                except:
+                    db.rollback()
+                    db.close()
+                    cursor.close()
+                    res['respon_code'] == self.mysql_error
+                    return res
+                else:
+                    print('ok')
+                    db.close()
+                    cursor.close()
+                    return res
+            else:
+                res['respon_code'] == self.mysql_offline
+                return res
+        return res
+    
+    # def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
+    #     db = self.connection()
+    #     if LinkVaildate.vaildate_article(board_name,article_number) == self.request_sucess:
+    #         if db:
+    #             sql = \
+    #             "INSERT INTO ArticleDiscussions(\
+    #                 from_pttLite,\
+    #                 board_name,\
+    #                 article_number,\
+    #                 respone_type,\
+    #                 respone_user_id,\
+    #                 discussion,\
+    #                 respone_user_ip,\
+    #                 create_time,\
+    #                 last_update\
+    #                 )\
+    #             VALUES(true,'{}','{}','{}','{}','{}','{}',NOW(),NOW())".format(
+    #                 board_name,
+    #                 article_number,
+    #                 respone_type,
+    #                 respone_user_id,
+    #                 discussion,
+    #                 respone_user_ip
+    #             )
+    #             cursor = db.cursor()
+    #             cursor.execute(sql)
+    #             db.commit()
+    #             return self.request_sucess
+    #         else:
+    #             return self.mysql_offline
+    #     return self.request_not_found
 
-        elif res == self.request_not_found:
-            return self.request_not_found
+    # def reply(self,articleDiscussions_nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip):
+    #     db = self.connection()
+    #     res = LinkVaildate.vaildate_discussion(articleDiscussions_nu,board_name,article_number)
+    #     if res == self.request_sucess:
+    #         if db:
+    #             sql = \
+    #             "INSERT INTO ReplyFromPttLite(\
+    #                 articleDiscussions_nu,\
+    #                 board_name,\
+    #                 article_number,\
+    #                 respone_type,\
+    #                 respone_user_id,\
+    #                 reply,\
+    #                 respone_user_ip,\
+    #                 create_time,\
+    #                 last_update\
+    #                 )\
+    #             VALUES({},'{}','{}','{}','{}','{}','{}',now(),now())".format(
+    #                 articleDiscussions_nu,
+    #                 board_name,
+    #                 article_number,
+    #                 respone_type,
+    #                 respone_user_id,
+    #                 reply,
+    #                 respone_user_ip
+    #             )
+    #             db = self.connection()
+    #             cursor = db.cursor()
+    #             cursor.execute(sql)
+    #             db.commit()
+    #             return self.request_sucess
+    #         return self.mysql_offline
 
-        elif res == self.mysql_offline:
-            return self.mysql_offline
+    #     elif res == self.request_not_found:
+    #         return self.request_not_found
+
+    #     elif res == self.mysql_offline:
+    #         return self.mysql_offline
     
     def forgot_password(self,email):
         try:

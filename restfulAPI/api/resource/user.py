@@ -17,19 +17,25 @@ class FollowBoard(UserModel,Resource):
     @jwt_required 
     def post(self,board_name):
         uuid = get_jwt_identity()
-        if self.follow_board(uuid,board_name):
+        res = self.follow(uuid,board_name)
+        if res['respon_code'] == self.request_sucess:
             return {'msg':'sucess'},201
-        else:
-            return {'msg':'board not found'},404
+        elif res['respon_code'] == self.request_not_found:
+            return {'msg':'Board not found'},404
+        elif res['respon_code'] == self.mysql_offline:
+            return {'msg':'Board not found'},500
 
 class FollowArticle(UserModel,Resource):
     @jwt_required 
     def post(self,board_name,article_number):
         uuid = get_jwt_identity()
-        if self.follow_article(uuid,board_name,article_number):
+        res = self.follow(uuid,board_name,article_number)
+        if res['respon_code'] == self.request_sucess:
             return {'msg':'sucess'},201
-        else:
-            return {'msg':'article not found'},404
+        elif res['respon_code'] == self.request_not_found:
+            return {'msg':'Article not found'},404
+        elif res['respon_code'] == self.mysql_offline:
+            return {'msg':'Article not found'},500
 
 class GetFollowingArticles(UserModel,Resource):
     @jwt_required
@@ -187,7 +193,7 @@ class ChangePassword(UserModel,Resource):
         else:
             return {'msg':'Make sure password equal repeat-password'},400
 
-class Discuss(Resource,UserModel):
+class Discuss(UserModel,Resource):
     @jwt_required
     def post(self):
         uuid = get_jwt_identity()
@@ -214,14 +220,19 @@ class Discuss(Resource,UserModel):
         respone_user_id = self.get_user_by_uuid(uuid)['nickname']
         discussion = data['discussion']
         respone_user_ip = data['respone_user_ip']
-        
-        res = self.discuss(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
-        if res == self.request_sucess:
+
+        res = self.discuss_or_reply(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
+        if res['respon_code'] == self.request_sucess:
             return {'msg':'discussion submit'}, 201
-        elif res == self.request_not_found:
+
+        elif res['respon_code'] == self.request_not_found:
             return {'msg':'Can not find the article'}, 404
-        elif res == self.mysql_offline:
+
+        elif res['respon_code'] == self.mysql_offline:
             return {'msg':'MySQL offline'},500
+
+        elif res['respon_code'] == self.mysql_error:
+            return {'msg':'MySQL error'},500
         else:
             return {'msg':'Got error'},500
 
@@ -229,7 +240,7 @@ class Discuss(Resource,UserModel):
     def put(self):
         pass
 
-class Reply(Resource,UserModel,LinkVaildate):
+class Reply(UserModel,Resource):
     @jwt_required
     def post(self):
         uuid = get_jwt_identity()
@@ -261,13 +272,18 @@ class Reply(Resource,UserModel,LinkVaildate):
         reply = data['reply']
         respone_user_ip = data['respone_user_ip']
 
-        res = self.reply(nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip)
-        if res == self.request_sucess:
-            return {'msg':'reply submit'}, 201
-        elif res == self.request_not_found:
-            return {'msg':'Can not find the article'}, 404
-        elif res == self.mysql_offline:
-            return {'msg':'MySQL offline'}, 500
+        res = self.discuss_or_reply(nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip)
+        if res['respon_code'] == self.request_sucess:
+            return {'msg':'discussion submit'},201
+
+        elif res['respon_code'] == self.request_not_found:
+            return {'msg':'Can not find the article'},404
+
+        elif res['respon_code'] == self.mysql_offline:
+            return {'msg':'MySQL offline'},500
+
+        elif res['respon_code'] == self.mysql_error:
+            return {'msg':'MySQL error'},500
         else:
             return {'msg':'Got error'},500
 
@@ -334,13 +350,3 @@ class LogoutRefreshToken(UserModel,Resource):
         jti = get_raw_jwt()['jti']
         blacklist.add(jti)
         return {"msg": "Successfully logged out"}, 200
-
-class ArticleConten(UserModel,Resource):
-    def get(self):
-        db = self.connection()
-        if db:
-            sql = "SELECT content FROM Articles WHERE board_name = '{} AND article_number = '{}''".format(board_name,article_name)
-            cursor = db.cursor()
-            cursor.execute(sql)
-            res = cursor.fetchone()['content']
-            return jsonify(res)

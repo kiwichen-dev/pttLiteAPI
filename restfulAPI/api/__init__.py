@@ -36,6 +36,9 @@ class InintAPP():
         self.mysql_error = int(2)
         self.request_sucess = int(3)
         self.request_not_found = int(4)
+        self.mysql_respon = dict()
+        self.mysql_respon['respon_code'] = None
+        self.mysql_respon['respon_content'] = None
 
     @staticmethod
     def connection():
