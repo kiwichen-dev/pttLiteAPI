@@ -118,8 +118,9 @@ class UserModel(InintAPP):
         return res
     
     def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
-        if LinkVaildate.vaildate_article(board_name,article_number):
-            try:
+        db = self.connection()
+        if LinkVaildate.vaildate_article(board_name,article_number) == self.request_sucess:
+            if db:
                 sql = \
                 "INSERT INTO ArticleDiscussions(\
                     from_pttLite,\
@@ -140,32 +141,19 @@ class UserModel(InintAPP):
                     discussion,
                     respone_user_ip
                 )
-                db = self.connection()
                 cursor = db.cursor()
                 cursor.execute(sql)
                 db.commit()
-                isSucess = True
-            except Exception as e:
-                isSucess = False
-                print(e)
-                try:
-                    db.rollback()
-                    db.close()
-                    cursor.close()
-                except Exception as e:
-                    print(e)
-                    return isSucess
+                return self.request_sucess
             else:
-                db.close()
-                cursor.close()
-            finally:
-                return isSucess
-        else:
-            return False
+                return self.mysql_offline
+        return self.request_not_found
 
     def reply(self,articleDiscussions_nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip):
-        if LinkVaildate.vaildate_discussion:
-            try:
+        db = self.connection()
+        res = LinkVaildate.vaildate_discussion(articleDiscussions_nu,board_name,article_number)
+        if res == self.request_sucess:
+            if db:
                 sql = \
                 "INSERT INTO ReplyFromPttLite(\
                     articleDiscussions_nu,\
@@ -191,24 +179,14 @@ class UserModel(InintAPP):
                 cursor = db.cursor()
                 cursor.execute(sql)
                 db.commit()
-                isSucess = True
-            except Exception as e:
-                isSucess = False
-                print(e)
-                try:
-                    db.rollback()
-                    db.close()
-                    cursor.close()
-                except Exception as e:
-                    print(e)
-                    return isSucess
-            else:
-                db.close()
-                cursor.close()
-            finally:
-                return isSucess
-        else:
-            return False
+                return self.request_sucess
+            return self.mysql_offline
+
+        elif res == self.request_not_found:
+            return self.request_not_found
+
+        elif res == self.mysql_offline:
+            return self.mysql_offline
     
     def forgot_password(self,email):
         try:

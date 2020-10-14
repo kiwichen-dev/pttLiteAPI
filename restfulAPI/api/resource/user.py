@@ -214,11 +214,16 @@ class Discuss(Resource,UserModel):
         respone_user_id = self.get_user_by_uuid(uuid)['nickname']
         discussion = data['discussion']
         respone_user_ip = data['respone_user_ip']
-
-        if self.discuss(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
-            return {'message':'discussion submit'}, 201
+        
+        res = self.discuss(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
+        if res == self.request_sucess:
+            return {'msg':'discussion submit'}, 201
+        elif res == self.request_not_found:
+            return {'msg':'Can not find the article'}, 404
+        elif res == self.mysql_offline:
+            return {'msg':'MySQL offline'},500
         else:
-            return {'message':'Can not find the article'}, 400
+            return {'msg':'Got error'},500
 
     @jwt_required
     def put(self):
@@ -256,11 +261,15 @@ class Reply(Resource,UserModel,LinkVaildate):
         reply = data['reply']
         respone_user_ip = data['respone_user_ip']
 
-        if self.vaildate_discussion(nu,board_name,article_number):
-            self.reply(nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip)
-            return {'message':'reply submit'}, 201
+        res = self.reply(nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip)
+        if res == self.request_sucess:
+            return {'msg':'reply submit'}, 201
+        elif res == self.request_not_found:
+            return {'msg':'Can not find the article'}, 404
+        elif res == self.mysql_offline:
+            return {'msg':'MySQL offline'}, 500
         else:
-            return {'message':'Can not find the article'}, 400
+            return {'msg':'Got error'},500
 
 class RefreshToken(UserModel,Resource):
     @jwt_refresh_token_required

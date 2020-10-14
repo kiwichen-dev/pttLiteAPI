@@ -9,58 +9,29 @@ class Index(InintAPP, Resource):
     def get(self):
         index = dict()
         distinct_board_name_top = list()
-        try:
+        db = self.connection()
+        if db:
             sql = "SELECT DISTINCT board_name FROM Category"
-            db = self.connection()
             cursor = db.cursor()
             cursor.execute(sql)
             distinct_board_name = cursor.fetchall()
-        except Exception as e:
-            print(e)
-            db.rollback()
-            db.close()
-            cursor.close()
-            return {'msg':'API error'},500  #掛了就不執行以下
-        else:
             for board_name in distinct_board_name:
-                try:
-                    sql = "SELECT * FROM Articles WHERE board_name = '{}' AND trim(content_snapshot)!='' ORDER BY amount_of_discussions DESC LIMIT 1".format(
-                        board_name['board_name'])
-                    cursor.execute(sql)
-                    res = cursor.fetchone()
-                    if res:
-                        distinct_board_name_top.append(res)
-                except Exception as e:
-                    print(e)
-                else:
-                    pass
-                finally:
-                    pass
-        finally:
-            pass
-
-        index['articles'] = distinct_board_name_top
-        index['image'] = '/index.jpg'      
-        try:
+                sql = "SELECT * FROM Articles WHERE board_name = '{}' AND trim(content_snapshot)!='' ORDER BY amount_of_discussions DESC LIMIT 1".format(board_name['board_name'])
+                cursor.execute(sql)
+                res = cursor.fetchone()
+                if res:
+                    distinct_board_name_top.append(res)
+            index['articles'] = distinct_board_name_top
+            index['image'] = '/index.jpg'      
             sql = "SELECT * FROM Top8AmountOfLikesBoards ORDER BY amount_of_likes DESC LIMIT 8"
             cursor.execute(sql)
             top_8_amount_of_likes_boards = cursor.fetchall()
             index['top_8_amount_of_likes_boards'] = top_8_amount_of_likes_boards
-        except Exception as e:
-            print(e)
-            index['top_8_amount_of_likes_boards'] = None
-            try:
-                db.rollback()
-                db.close()
-                cursor.close()
-            except Exception as e:
-                print(e)
-                pass #無法關閉 直接去finally
-        else:
             db.close()
             cursor.close()
-        finally: #有無top_8_like_count_boards都回傳資料
             return jsonify(index)
+        else:
+            return {'msg':'MySQL offline'},500
 
 class News(InintAPP, Resource):
     def get(self):
@@ -68,58 +39,43 @@ class News(InintAPP, Resource):
 
 class Board(InintAPP, Resource):
     def get(self, board_name, order_by='create_time', limit='200'):
-        try:
+        db = self.connection()
+        if db:
             sql = "SELECT * FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name, order_by, limit)
-            db = self.connection()
             cursor = db.cursor()
             cursor.execute(sql)
-        except Exception as e:
-            print(e)
-            try: #出錯時 嘗試rollback或關閉連線
-                db.rollback()
-                db.close()
-                ursor.close()
-                return {'msg':'API error'},500
-            except Exception as e:
-                print(e)
-                return {'msg':'API error'},500
-        else: #無錯誤時執行
             package = dict()
             package['board'] = cursor.fetchall()
             db.close()
             cursor.close()
             return jsonify(package)
+        else:
+            return {'msg':'MySQL offline'},500
 
 class AllBoards(InintAPP, Resource):
     def get(self):
         db = self.connection()
-        cursor = db.cursor()
-        cursor.execute('SELECT * FROM Category')
-        category = cursor.fetchall()
-        cursor.close()
-        package = dict()
-        package['all_boards'] = category
-        db.close()
-        cursor.close()
-        return jsonify(package)
+        if db:
+            cursor = db.cursor()
+            cursor.execute('SELECT * FROM Category')
+            category = cursor.fetchall()
+            cursor.close()
+            package = dict()
+            package['all_boards'] = category
+            db.close()
+            cursor.close()
+            return jsonify(package)
+        else:
+            return {'msg':'API error'},500
 
 class ArticlePage(InintAPP, Resource):
     def get(self, board_name, article_number):
-        try:
+        db = self.connection()
+        if db:
             sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name, article_number)
-            db = self.connection()
             cursor = db.cursor()
             cursor.execute(sql)
             article_fetch = cursor.fetchall()[0]
-        except Exception as e:
-            print(e)
-            try:
-                db.rollback()
-                db.close()
-                cursor.close()
-            except:
-                return {'msg':'API error'},500
-        else:
             if article_fetch:
                 sql = "SELECT nu,from_pttLite,respone_type,respone_user_id,discussion,respone_user_ip,create_time FROM ArticleDiscussions WHERE article_number ='{}'".format(article_number)
                 cursor.execute(sql)
@@ -152,6 +108,8 @@ class ArticlePage(InintAPP, Resource):
                 db.close()
                 cursor.close()
                 return {'msg': 'article not found'}, 404
+        else:
+            return {'msg':'MySQL offline'},500
 
 def search():
     cursor = db.cursor()

@@ -31,24 +31,29 @@ def check_if_token_in_blacklist(decrypted_token):
 
 class InintAPP():
     def __init__(self):
-        self.gossiping = None
-        self.stock = None
-        self.nba = None
-        self.baseball = None
-        self.c_chat = None
+        self.mysql_offline = int(0)
+        self.mysql_is_working = int(1)
+        self.mysql_error = int(2)
+        self.request_sucess = int(3)
+        self.request_not_found = int(4)
 
     @staticmethod
     def connection():
-        pool = Pool(
-            host=PymysqlConfig.host,
-            port=PymysqlConfig.port,
-            user=PymysqlConfig.user,
-            password=PymysqlConfig.password,
-            db=PymysqlConfig.db
-        )
-        pool.init()
-        pool.get_conn()
-        return pool.get_conn()
+        try:
+            pool = Pool(
+                host=PymysqlConfig.host,
+                port=PymysqlConfig.port,
+                user=PymysqlConfig.user,
+                password=PymysqlConfig.password,
+                db=PymysqlConfig.db
+            )
+            pool.init()
+            pool.get_conn()
+        except:
+            print('MySQL連線失敗')
+            return None
+        else:
+            return pool.get_conn()
 
     @property
     def random_user_id(self):

@@ -81,28 +81,33 @@ class LinkVaildate(InintAPP):
 
     @staticmethod
     def vaildate_article(board_name,article_number):
-        sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
         db = InintAPP.connection()
-        cursor = db.cursor()
-        cursor.execute(sql)
-        res = cursor.fetchone()
-        db.close()
-        cursor.close()
-        if res:
-            return True
+        if db:
+            sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
+            cursor = db.cursor()
+            cursor.execute(sql)
+            res = cursor.fetchone()
+            db.close()
+            cursor.close()
+            if res:
+                return 3
+            else:
+                return 4
         else:
-            return False
+            return 0
 
     @staticmethod
     def vaildate_discussion(nu,board_name,article_number):
-        sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(nu,board_name,article_number)
         db = InintAPP.connection()
-        cursor = db.cursor()
-        cursor.execute(sql)
-        res = cursor.fetchone()
-        db.close()
-        cursor.close()
-        if res:
-            return True
-        else:
-            return False
+        if db:
+            sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(nu,board_name,article_number)
+            cursor = db.cursor()
+            cursor.execute(sql)
+            res = cursor.fetchone()
+            db.close()
+            cursor.close()
+            if res:
+                return 3
+            else:
+                return 4
+        return 0
