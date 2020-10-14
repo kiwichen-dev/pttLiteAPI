@@ -44,7 +44,7 @@ class UserModel(InintAPP):
         if check_password_hash(password_hash,password):
             return True,uuid
         else:
-            return False
+            return False,None
 
     def get_user_data(self,email):
         sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
@@ -146,8 +146,8 @@ class UserModel(InintAPP):
                 db.commit()
                 isSucess = True
             except Exception as e:
-                print(e)
                 isSucess = False
+                print(e)
                 try:
                     db.rollback()
                     db.close()
@@ -193,8 +193,8 @@ class UserModel(InintAPP):
                 db.commit()
                 isSucess = True
             except Exception as e:
-                print(e)
                 isSucess = False
+                print(e)
                 try:
                     db.rollback()
                     db.close()
@@ -220,6 +220,7 @@ class UserModel(InintAPP):
             isSucess = True
         except Exception as e:
             isSucess = False
+            print(e)
             try:
                 db.rollback()
                 db.close()

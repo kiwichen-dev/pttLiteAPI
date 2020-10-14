@@ -24,7 +24,7 @@ class Index(InintAPP, Resource):
         else:
             for board_name in distinct_board_name:
                 try:
-                    sql = "SELECT * FROM Articles WHERE board_name = '{}' AND trim(body)!='' ORDER BY discussion_count DESC LIMIT 1".format(
+                    sql = "SELECT * FROM Articles WHERE board_name = '{}' AND trim(content_snapshot)!='' ORDER BY amount_of_discussions DESC LIMIT 1".format(
                         board_name['board_name'])
                     cursor.execute(sql)
                     res = cursor.fetchone()
@@ -42,13 +42,13 @@ class Index(InintAPP, Resource):
         index['articles'] = distinct_board_name_top
         index['image'] = '/index.jpg'      
         try:
-            sql = "SELECT * FROM Top8LikeCountBoards ORDER BY like_count DESC LIMIT 8"
+            sql = "SELECT * FROM Top8AmountOfLikesBoards ORDER BY amount_of_likes DESC LIMIT 8"
             cursor.execute(sql)
-            top_8_like_count_boards = cursor.fetchall()
-            index['top_8_like_count_boards'] = top_8_like_count_boards
+            top_8_amount_of_likes_boards = cursor.fetchall()
+            index['top_8_amount_of_likes_boards'] = top_8_amount_of_likes_boards
         except Exception as e:
             print(e)
-            index['top_8_like_count_boards'] = None
+            index['top_8_amount_of_likes_boards'] = None
             try:
                 db.rollback()
                 db.close()
@@ -110,66 +110,48 @@ class ArticlePage(InintAPP, Resource):
             db = self.connection()
             cursor = db.cursor()
             cursor.execute(sql)
-            article_content = cursor.fetchall()[0]
+            article_fetch = cursor.fetchall()[0]
         except Exception as e:
             print(e)
             try:
                 db.rollback()
                 db.close()
-                ursor.close()
+                cursor.close()
+            except:
                 return {'msg':'API error'},500
-            except Exception as e:
-                print(e)
-                return {'msg':'API error'},500
-            else:
-                pass
-            finally:
-                pass
-
-        if article_content:
-            try:
+        else:
+            if article_fetch:
                 sql = "SELECT nu,from_pttLite,respone_type,respone_user_id,discussion,respone_user_ip,create_time FROM ArticleDiscussions WHERE article_number ='{}'".format(article_number)
                 cursor.execute(sql)
                 article_discussions = cursor.fetchall()
                 sql = "SELECT nu,respone_type,respone_user_id,reply,respone_user_ip,create_time,last_update FROM ReplyFromPttLite WHERE board_name ='{}' AND article_number ='{}'".format(board_name, article_number)
                 cursor.execute(sql)
                 reply_from_pttLite = cursor.fetchall()
-            except Exception as e:
-                print(e)
-                try:
-                    db.rollback()
-                    db.close()
-                    ursor.close()
-                    return {'msg':'API error'},500
-                except Exception as e:
-                    print(e)
-                    return {'msg':'API error'},500
-            else:
                 article = dict()
                 article_page = dict()
-                article['board_name'] = article_content['board_name']
-                article['article_number'] = article_content['article_number']
-                article['article_url'] = article_content['article_url']
-                article['title'] = article_content['title']
-                article['author'] = article_content['author']
-                article['ip_location'] = article_content['ip_location']
-                article['body'] = article_content['body']
-                article['discussion_count'] = article_content['discussion_count']
-                article['like_count'] = article_content['like_count']
-                article['neutral_count'] = article_content['neutral_count']
-                article['dislike_count'] = article_content['dislike_count']
-                article['create_time'] = article_content['create_time']
-                article['last_update'] = article_content['last_update']
+                article['board_name'] = article_fetch['board_name']
+                article['article_number'] = article_fetch['article_number']
+                article['article_url'] = article_fetch['article_url']
+                article['title'] = article_fetch['title']
+                article['author'] = article_fetch['author']
+                article['ip_location'] = article_fetch['ip_location']
+                article['content'] = article_fetch['content']
+                article['amount_of_discussions'] = article_fetch['amount_of_discussions']
+                article['amount_of_likes'] = article_fetch['amount_of_likes']
+                article['amount_of_neutrals'] = article_fetch['amount_of_neutrals']
+                article['amount_of_dislikes'] = article_fetch['amount_of_dislikes']
+                article['create_time'] = article_fetch['create_time']
+                article['last_update'] = article_fetch['last_update']
                 article['discussions'] = article_discussions
                 article['reply_from_pttLite'] = reply_from_pttLite
                 article_page['article_page'] = article
                 db.close()
                 cursor.close()
                 return jsonify(article_page)
-        else:
-            db.close()
-            cursor.close()
-            return {'msg': 'article not found'}, 404
+            else:
+                db.close()
+                cursor.close()
+                return {'msg': 'article not found'}, 404
 
 def search():
     cursor = db.cursor()
