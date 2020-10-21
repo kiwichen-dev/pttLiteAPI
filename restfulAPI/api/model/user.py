@@ -91,27 +91,30 @@ class UserModel(LinkValidate):
             res = self.is_link(args[1],args[2])
         else:
             return self.mysql_error
-
-        if res['respon_code'] == self.request_sucess:
-            db = self.connection()
-            if db:
-                cursor = db.cursor()
-                try:
-                    cursor.execute(sql)
-                    db.commit()
-                    db.close()
-                    cursor.close()
-                except:
-                    db.rollback()
-                    res['respon_code'] == self.mysql_error
-                    return res
-                else:
-                    return res
-            else:
-                res['respon_code'] == self.mysql_offline
-                return res
-        else:
-            return res
+        
+        return self.db_commit_rollback(res)
+        # if res['respon_code'] == self.request_sucess:
+        #     db = self.connection()
+        #     if db:
+        #         cursor = db.cursor()
+        #         try:
+        #             cursor.execute(sql)
+        #             db.commit()
+        #             db.close()
+        #             cursor.close()
+        #         except:
+        #             db.rollback()
+        #             db.close()
+        #             cursor.close()
+        #             res['respon_code'] == self.mysql_error
+        #             return res
+        #         else:
+        #             return res
+        #     else:
+        #         res['respon_code'] == self.mysql_offline
+        #         return res
+        # else:
+        #     return res
 
     # def follow_board(self,uuid,board_name):
     #     res = self.is_link(board_name)
@@ -240,27 +243,28 @@ class UserModel(LinkValidate):
         else:
             return self.mysql_error
 
-        if res['respon_code'] == self.request_sucess:
-            db = self.connection()
-            if db:
-                cursor = db.cursor()
-                try:
-                    cursor.execute(sql)
-                    db.commit()
-                except:
-                    db.rollback()
-                    db.close()
-                    cursor.close()
-                    res['respon_code'] == self.mysql_error
-                    return res
-                else:
-                    db.close()
-                    cursor.close()
-                    return res
-            else:
-                res['respon_code'] == self.mysql_offline
-                return res
-        return res
+        return self.db_commit_rollback(res)
+        # if res['respon_code'] == self.request_sucess:
+        #     db = self.connection()
+        #     if db:
+        #         cursor = db.cursor()
+        #         try:
+        #             cursor.execute(sql)
+        #             db.commit()
+        #             db.close()
+        #             cursor.close()
+        #         except:
+        #             db.rollback()
+        #             db.close()
+        #             cursor.close()
+        #             res['respon_code'] == self.mysql_error
+        #             return res
+        #         else:
+        #             return res
+        #     else:
+        #         res['respon_code'] == self.mysql_offline
+        #         return res
+        # return res
     
     # def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
     #     db = self.connection()

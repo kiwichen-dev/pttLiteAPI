@@ -76,6 +76,36 @@ class InitAPP():
         else:
             return {'msg':'Get an error'},500
 
+    def db_commit_rollback(self,res):
+        if res['respon_code'] == self.request_sucess:
+            db = self.connection()
+            if db:
+                cursor = db.cursor()
+                try:
+                    cursor.execute(sql)
+                    db.commit()
+                    db.close()
+                    cursor.close()
+                except:
+                    try:
+                        db.rollback()
+                        db.close()
+                        cursor.close()
+                    except:
+                        pass
+                    else:
+                        pass
+                    finally:
+                        pass
+                    res['respon_code'] == self.mysql_error
+                    return res
+                else:
+                    return res
+            else:
+                res['respon_code'] == self.mysql_offline
+                return res
+        return res #回傳respon_code不更動
+
     # def refreshBoards(self,board_name):
     #     db = self.connection()
     #     cursor = db.cursor()
