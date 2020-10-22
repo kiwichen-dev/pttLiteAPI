@@ -43,7 +43,7 @@ class InitAPP():
         self.mysql_respon['respon_content'] = None
 
     @staticmethod
-    def connection():
+    def pool():
         try:
             pool = Pool(
                 host=PymysqlConfig.host,
@@ -53,13 +53,11 @@ class InitAPP():
                 db=PymysqlConfig.db
             )
             pool.init()
-            pool.get_conn()
         except:
             print('MySQL連線失敗')
             return None
         else:
-            return pool.get_conn()
-
+            return pool
     @property
     def random_user_id(self):
         return ''.join(random.sample(string.ascii_letters + string.digits, 8))
@@ -78,18 +76,19 @@ class InitAPP():
 
     def db_commit_rollback(self,res):
         if res['respon_code'] == self.request_sucess:
-            db = self.connection()
-            if db:
-                cursor = db.cursor()
+            pool = self.pool()
+            connection = pool.get_conn()
+            if connection:
+                cursor = connection.cursor()
                 try:
                     cursor.execute(sql)
-                    db.commit()
-                    db.close()
+                    connection.commit()
+                    connection.close()
                     cursor.close()
                 except:
                     try:
-                        db.rollback()
-                        db.close()
+                        connection.rollback()
+                        connection.close()
                         cursor.close()
                     except:
                         pass
@@ -107,19 +106,19 @@ class InitAPP():
         return res #回傳respon_code不更動
 
     # def refreshBoards(self,board_name):
-    #     db = self.connection()
-    #     cursor = db.cursor()
+    #     pool = self.pool()
+    #     cursor = connection.cursor()
     #     sql = "SELECT * FROM articles WHERE board_name = '%s'" % (board_name)
     #     cursor.execute(sql)
     #     query_result = cursor.fetchall()
     #     if query_result:
     #         package = dict()
     #         package['board'] = query_result
-    #         db.close()
+    #         connection.close()
     #         cursor.close()
     #         return jsonify(package)
     #     else:
-    #         db.close()
+    #         connection.close()
     #         cursor.close()
     #         return None
 

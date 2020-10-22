@@ -77,17 +77,19 @@ class Login(UserModel,Resource):
                 return {'msg':'Get an error'},500
         elif is_user['respon_code'] == self.request_not_found:
             user_id = self.random_user_id
-            db = self.connection()
-            cursor = db.cursor()
+            pool = self.pool()
+            connection = pool.get_conn()
+            cursor = connection.cursor()
             password_hash = self.set_password(password)
             sql = "INSERT INTO Users(email,nickname,pw,pw_hash,create_time,user_uuid) VALUES('{}','{}','{}','{}',now(),uuid())".format(email,user_id,password,password_hash)
             cursor.execute(sql)
-            db.commit()
+            connection.commit()
             sql = "SELECT user_uuid FROM Users WHERE nickname = '{}'".format(user_id)
             cursor.execute(sql)
             uuid = cursor.fetchone()['user_uuid']
-            db.close()
-            cursor.close()
+            # connection.close()
+            # cursor.close()
+            pool.release(connection)
             return {
                     'access_token': create_access_token(identity=uuid),
                     'refresh_token': create_refresh_token(identity=uuid)
@@ -121,8 +123,9 @@ class Login(UserModel,Resource):
 #         email = data['email']
 #         username = data['username']
 #         password = data['password']
-#         db = self.connection()
-#         cursor = db.cursor()
+#         pool = self.pool()
+#         connection = pool.get_conn()
+#         cursor = connection.cursor()
 #         sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
 #         cursor.execute(sql)
 #         if cursor.fetchone():
@@ -132,7 +135,7 @@ class Login(UserModel,Resource):
 #             password_hash = self.set_password(password)
 #             sql = "INSERT INTO users(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
 #             cursor.execute(sql)
-#             db.commit()
+#             connection.commit()
 #             cursor.close()
 #             return {'message':'user has been created'}, 201
 
