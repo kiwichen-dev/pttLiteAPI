@@ -30,6 +30,7 @@ pool = Pool(
     db=PymysqlConfig.db
 )
 pool.init()
+connection = pool.get_conn()
 blacklist = set()
 
 @jwt.token_in_blacklist_loader
@@ -84,7 +85,7 @@ class InitAPP():
 
     def db_commit_rollback(self,res):
         if res['respon_code'] == self.request_sucess:
-            pool = self.pool()
+            # pool = self.pool()
             connection = pool.get_conn()
             if connection:
                 cursor = connection.cursor()
@@ -114,7 +115,7 @@ class InitAPP():
         return res #回傳respon_code不更動
 
     # def refreshBoards(self,board_name):
-    #     pool = self.pool()
+    #     # pool = self.pool()
     #     cursor = connection.cursor()
     #     sql = "SELECT * FROM articles WHERE board_name = '%s'" % (board_name)
     #     cursor.execute(sql)
