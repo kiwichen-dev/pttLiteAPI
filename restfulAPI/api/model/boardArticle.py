@@ -75,7 +75,7 @@ class LinkValidate(InitAPP):
         else:
             return self.mysql_error
         # pool = self.pool()
-        #connection = pool.get_conn()
+        connection = self.connection()
         if connection:
             cursor = connection.cursor()
             cursor.execute(sql)
