@@ -22,6 +22,14 @@ mail = Mail(app)
 mail.init_app(app)
 api = Api(app)
 jwt = JWTManager(app)
+pool = Pool(
+    host=PymysqlConfig.host,
+    port=PymysqlConfig.port,
+    user=PymysqlConfig.user,
+    password=PymysqlConfig.password,
+    db=PymysqlConfig.db
+)
+pool.init()
 blacklist = set()
 
 @jwt.token_in_blacklist_loader
@@ -42,22 +50,22 @@ class InitAPP():
         self.mysql_respon['respon_code'] = None
         self.mysql_respon['respon_content'] = None
 
-    @staticmethod
-    def pool():
-        try:
-            pool = Pool(
-                host=PymysqlConfig.host,
-                port=PymysqlConfig.port,
-                user=PymysqlConfig.user,
-                password=PymysqlConfig.password,
-                db=PymysqlConfig.db
-            )
-            pool.init()
-        except:
-            print('MySQL連線失敗')
-            return None
-        else:
-            return pool
+    # @staticmethod
+    # def pool():
+    #     try:
+    #         pool = Pool(
+    #             host=PymysqlConfig.host,
+    #             port=PymysqlConfig.port,
+    #             user=PymysqlConfig.user,
+    #             password=PymysqlConfig.password,
+    #             db=PymysqlConfig.db
+    #         )
+    #         pool.init()
+    #     except:
+    #         print('MySQL連線失敗')
+    #         return None
+    #     else:
+    #         return pool
     @property
     def random_user_id(self):
         return ''.join(random.sample(string.ascii_letters + string.digits, 8))

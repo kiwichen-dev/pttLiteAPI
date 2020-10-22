@@ -1,5 +1,5 @@
 from flask import jsonify, request, current_app
-from api import InitAPP
+from api import InitAPP,pool
 from api.model.boardArticle import LinkValidate
 from flask_restful import Resource, reqparse
 import re
@@ -9,7 +9,7 @@ class Index(LinkValidate, Resource):
     def get(self):
         index = dict()
         distinct_board_name_top = list()
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         if connection:
             sql = "SELECT DISTINCT board_name FROM Category"
@@ -39,7 +39,7 @@ class Board(LinkValidate, Resource):
     def get(self, board_name, order_by='create_time', limit='200'):
         res = self.is_link(board_name)
         if res['respon_code'] == self.request_sucess:
-            pool = self.pool()
+            # pool = self.pool()
             connection = pool.get_conn()
             if connection:
                 sql = "SELECT * FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
@@ -60,7 +60,7 @@ class Board(LinkValidate, Resource):
 
 class AllBoards(LinkValidate, Resource):
     def get(self):
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         if connection:
             cursor = connection.cursor()
@@ -80,7 +80,7 @@ class ArticlePage(LinkValidate, Resource):
     def get(self, board_name, article_number):
         res = self.is_link(board_name,article_number)
         if res['respon_code'] == self.request_sucess:
-            pool = self.pool()
+            # pool = self.pool()
             connection = pool.get_conn()
             if connection:
                 cursor = connection.cursor()
@@ -124,7 +124,7 @@ def search():
     cursor = connection.cursor()
     if request.method == 'POST':
         keyWord = request.form.get('keyWord')
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         sql = "SELECT * FROM Articles WHERE title LIKE '%s'" % (
@@ -138,7 +138,7 @@ def search():
 
 class BoardToList(LinkValidate, Resource):
     def get(self):
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         sql = "SELECT DISTINCT board_name FROM Category ORDER BY board_name ASC"
@@ -156,7 +156,7 @@ class BoardToList(LinkValidate, Resource):
 
 class Article_Left_Join(LinkValidate, Resource):
     def get(self, board, article_number):
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         sql = "SELECT * FROM Articles WHERE board_name = '%s' AND article_number = '%s'" % (
@@ -214,7 +214,7 @@ class Article_Left_Join(LinkValidate, Resource):
 
 class ArticleContent(LinkValidate,Resource):
     def get(self,board_name,article_number):
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         if connection:
             sql = "SELECT content FROM Articles WHERE board_name = '{}' AND article_number = '{}' ".format(board_name,article_number)

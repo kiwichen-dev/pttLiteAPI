@@ -2,6 +2,7 @@ from flask_restful import Resource, reqparse
 from flask import request, current_app, jsonify
 from api import InitAPP,check_if_token_in_blacklist,blacklist
 import json
+from api import pool
 from api.model.user import UserModel
 from api.model.boardArticle import LinkValidate
 from flask_jwt_extended import (
@@ -77,7 +78,7 @@ class Login(UserModel,Resource):
                 return {'msg':'Get an error'},500
         elif is_user['respon_code'] == self.request_not_found:
             user_id = self.random_user_id
-            pool = self.pool()
+            # pool = self.pool()
             connection = pool.get_conn()
             cursor = connection.cursor()
             password_hash = self.set_password(password)
@@ -123,7 +124,7 @@ class Login(UserModel,Resource):
 #         email = data['email']
 #         username = data['username']
 #         password = data['password']
-#         pool = self.pool()
+#         # pool = self.pool()
 #         connection = pool.get_conn()
 #         cursor = connection.cursor()
 #         sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)

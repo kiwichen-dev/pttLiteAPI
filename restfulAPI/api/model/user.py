@@ -13,7 +13,7 @@ import os
 import base64
 from os import listdir
 from api.model.boardArticle import LinkValidate
-from api import mail
+from api import mail,pool
 
 class UserModel(LinkValidate):
     def min_length_str(self,min_length):
@@ -32,7 +32,7 @@ class UserModel(LinkValidate):
         return generate_password_hash(password)
 
     def validate_password(self,email,password):
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         if connection:
             try:
@@ -63,7 +63,7 @@ class UserModel(LinkValidate):
 
     def get_user_data(self,email):
         sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -75,7 +75,7 @@ class UserModel(LinkValidate):
 
     def get_user_by_uuid(self,uuid):
         sql = "SELECT * FROM Users WHERE user_uuid = '{}'".format(uuid)
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -100,7 +100,7 @@ class UserModel(LinkValidate):
         
         return self.db_commit_rollback(res)
         # if res['respon_code'] == self.request_sucess:
-        #     pool = self.pool()
+        #     # pool = self.pool()
         #     connection = pool.get_conn()
         #     if connection:
         #         cursor = connection.cursor()
@@ -128,7 +128,7 @@ class UserModel(LinkValidate):
     #     if res['respon_code'] == self.request_sucess:
     #         # sql = "INSERT INTO FollowingBoards(user_uuid,board_name,create_time) VALUES( (SELECT user_uuid FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
     #         sql = "INSERT INTO FollowingBoards (user_uuid,board_name,create_time) VALUES ('{}','{}',now())".format(uuid,board_name)
-    #         pool = self.pool()
+    #         # pool = self.pool()
     #         connection = pool.get_conn()
     #         if connection:
     #             cursor = connection.cursor()
@@ -158,7 +158,7 @@ class UserModel(LinkValidate):
     #         # sql = "INSERT INTO FollowingArticles(id,article_url,board_name,article_number,create_time)\
     #         #      VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
     #         sql = "INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(uuid,article_url,board_name,article_number)
-    #         pool = self.pool()
+    #         # pool = self.pool()
     #         connection = pool.get_conn()
     #         if connection:
     #             cursor = connection.cursor()
@@ -184,7 +184,7 @@ class UserModel(LinkValidate):
     def get_following_boards(self,uuid):
         # sql = "SELECT board_name,create_time FROM FollowingBoards WHERE user_uuid = (SELECT id FROM users WHERE email ='{}')".format(email)
         sql = "SELECT * FROM FollowingBoards WHERE user_uuid = '{}'".format(uuid)
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -197,7 +197,7 @@ class UserModel(LinkValidate):
     def get_following_articles(self,uuid):
         # sql = "SELECT article_url,create_time FROM FollowingArticles WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
         sql = "SELECT * FROM FollowingArticles WHERE user_uuid = '{}'".format(uuid)
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -258,7 +258,7 @@ class UserModel(LinkValidate):
 
         return self.db_commit_rollback(res)
         # if res['respon_code'] == self.request_sucess:
-        #     pool = self.pool()
+        #     # pool = self.pool()
     # connection = pool.get_conn()
         #     if connection:
         #         cursor = connection.cursor()
@@ -281,7 +281,7 @@ class UserModel(LinkValidate):
         # return res
     
     # def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
-    #     pool = self.pool()
+    #     # pool = self.pool()
     #     connection = pool.get_conn()
     #     if LinkValidate.vaildate_article(board_name,article_number) == self.request_sucess:
     #         if connection:
@@ -314,7 +314,7 @@ class UserModel(LinkValidate):
     #     return self.request_not_found
 
     # def reply(self,articleDiscussions_nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip):
-    #     pool = self.pool()
+    #     # pool = self.pool()
     #     connection = pool.get_conn()
     #     res = LinkValidate.vaildate_discussion(articleDiscussions_nu,board_name,article_number)
     #     if res == self.request_sucess:
@@ -340,7 +340,7 @@ class UserModel(LinkValidate):
     #                 reply,
     #                 respone_user_ip
     #             )
-    #             pool = self.pool()
+    #             # pool = self.pool()
     #             connection = pool.get_conn()
     #             cursor = connection.cursor()
     #             cursor.execute(sql)
@@ -357,7 +357,7 @@ class UserModel(LinkValidate):
     def forgot_password(self,email):
         try:
             sql = "SELECT user_uuid FROM Users WHERE email = '{}'".format(email)
-            pool = self.pool()
+            # pool = self.pool()
             connection = pool.get_conn()
             cursor = connection.cursor()
             cursor.execute(sql)
@@ -397,7 +397,7 @@ class UserModel(LinkValidate):
     
     def vaildate_token(self,token):
         uuid = decode_token(token)['identity']
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         sql = "SELECT * FROM Users WHERE user_uuid = '{}' ".format(uuid)
@@ -425,7 +425,7 @@ class UserModel(LinkValidate):
             uuid = vaild[1]
             try:
                 sql = "UPDATE Users SET pw = '{}', pw_hash = '{}' WHERE user_uuid = '{}'".format(password,password_hash,uuid)
-                pool = self.pool()
+                # pool = self.pool()
                 connection = pool.get_conn()
                 cursor = connection.cursor()
                 cursor.execute(sql)
@@ -448,7 +448,7 @@ class UserModel(LinkValidate):
         password_hash = self.set_password(password)
         try:
             sql = "UPDATE Users SET pw = '{}', pw_hash = '{}' WHERE user_uuid = '{}'".format(password,password_hash,uuid)
-            pool = self.pool()
+            # pool = self.pool()
             connection = pool.get_conn()
             cursor = connection.cursor()
             cursor.execute(sql)
@@ -472,7 +472,7 @@ class UserModel(LinkValidate):
         return token
 
     def isUser(self,email):
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         if connection:
             try:
@@ -531,7 +531,7 @@ class UserModel(LinkValidate):
     
     def my_reply(self,uuid):
         sql = "SELECT * FROM ReplyFromPttLite WHERE respone_user_id = ( SELECT nickname FROM Users WHERE user_uuid = '{}' )".format(uuid)
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -543,7 +543,7 @@ class UserModel(LinkValidate):
 
     def my_discussions(self,uuid):
         sql = "SELECT * FROM ArticleDiscussions WHERE respone_user_id = ( SELECT nickname FROM Users WHERE user_uuid = '{}' )".format(uuid)
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -555,7 +555,7 @@ class UserModel(LinkValidate):
 
     def login_records(self,uuid):
         sql = "INSERT INTO LoginRecords(user_uuid,login_time,ip) VALUES('{}',now(),'111.111.111.111')".format(uuid)
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -566,7 +566,7 @@ class UserModel(LinkValidate):
 
     def get_login_records(self,uuid):
         sql = "SELECT login_time,ip FROM LoginRecords WHERE user_uuid = '{}'".format(uuid)
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -585,7 +585,7 @@ class UserModel(LinkValidate):
         user_data['login_records'] = self.get_login_records(uuid)
 
         sql = "SELECT nickname,email FROM Users WHERE user_uuid = '{}'".format(uuid)
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         cursor = connection.cursor()
         cursor.execute(sql)

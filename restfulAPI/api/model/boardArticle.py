@@ -1,7 +1,7 @@
 from datetime import datetime
 import time
 from flask import current_app
-from api import InitAPP
+from api import InitAPP,pool
 
 """
 class Category(connection.Model):
@@ -74,7 +74,7 @@ class LinkValidate(InitAPP):
             sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(args[0],args[1],args[2])
         else:
             return self.mysql_error
-        pool = self.pool()
+        # pool = self.pool()
         connection = pool.get_conn()
         if connection:
             cursor = connection.cursor()
