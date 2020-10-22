@@ -14,7 +14,7 @@ class PymysqlConfig():
     password = 'quQ351dTx'
     db = 'PTTLite'
     charset = 'utf8'
-    port = int(31478)
+    port = int(3306)
 
 class Config():
     #JWT - General Options:
