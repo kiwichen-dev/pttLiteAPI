@@ -9,7 +9,7 @@ class SQLAlchemy_config():
     PTTLITE_PER_PAGE = os.environ.get('PTTLITE_PER_PAGE', 20)
 
 class PymysqlConfig():
-    host = '1.34.134.247'
+    host = '192.168.30.136'
     user = 'flask'
     password = 'quQ351dTx'
     db = 'PTTLite'
