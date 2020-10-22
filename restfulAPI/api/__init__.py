@@ -30,7 +30,6 @@ pool = Pool(
     db=PymysqlConfig.db
 )
 pool.init()
-connection = pool.get_conn()
 blacklist = set()
 
 @jwt.token_in_blacklist_loader
