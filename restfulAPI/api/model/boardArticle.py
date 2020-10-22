@@ -1,7 +1,7 @@
 from datetime import datetime
 import time
 from flask import current_app
-from api import InitAPP,pool
+from api import InitAPP
 
 """
 class Category(connection.Model):
@@ -75,14 +75,14 @@ class LinkValidate(InitAPP):
         else:
             return self.mysql_error
         # pool = self.pool()
-        connection = pool.get_conn()
+        #connection = pool.get_conn()
         if connection:
             cursor = connection.cursor()
             cursor.execute(sql)
             res = cursor.fetchone()
             # connection.close()
             # cursor.close()
-            pool.release(connection)
+            connection.close()
             if res:
                 self.mysql_respon['respon_code'] = self.request_sucess
                 self.mysql_respon['respon_content'] = res

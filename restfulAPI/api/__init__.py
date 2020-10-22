@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
-from pymysqlpool.pool import Pool
+# from pymysqlpool.pool import Pool
+import pymysql.cursors
 from api.config import PymysqlConfig, Config
 #from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
@@ -22,14 +23,16 @@ mail = Mail(app)
 mail.init_app(app)
 api = Api(app)
 jwt = JWTManager(app)
-pool = Pool(
-    host=PymysqlConfig.host,
-    port=PymysqlConfig.port,
-    user=PymysqlConfig.user,
-    password=PymysqlConfig.password,
-    db=PymysqlConfig.db
-)
-pool.init()
+# pool = Pool(
+#     host=PymysqlConfig.host,
+#     port=PymysqlConfig.port,
+#     user=PymysqlConfig.user,
+#     password=PymysqlConfig.password,
+#     db=PymysqlConfig.db
+# )
+# pool.init()
+
+
 blacklist = set()
 
 @jwt.token_in_blacklist_loader
@@ -49,6 +52,18 @@ class InitAPP():
         self.mysql_respon = dict()
         self.mysql_respon['respon_code'] = None
         self.mysql_respon['respon_content'] = None
+    
+    @staticmethod
+    def connection():
+        connection = pymysql.connect(
+        host=PymysqlConfig.host,
+        port=PymysqlConfig.port,
+        user=PymysqlConfig.user,
+        password=PymysqlConfig.password,
+        db=PymysqlConfig.db,
+        cursorclass=pymysql.cursors.DictCursor
+        )
+        return connection
 
     # @staticmethod
     # def pool():
@@ -85,7 +100,7 @@ class InitAPP():
     def db_commit_rollback(self,res):
         if res['respon_code'] == self.request_sucess:
             # pool = self.pool()
-            connection = pool.get_conn()
+            connection = self.connection()
             if connection:
                 cursor = connection.cursor()
                 try:

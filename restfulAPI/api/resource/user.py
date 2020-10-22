@@ -2,7 +2,6 @@ from flask_restful import Resource, reqparse
 from flask import request, current_app, jsonify
 from api import InitAPP,check_if_token_in_blacklist,blacklist
 import json
-from api import pool
 from api.model.user import UserModel
 from api.model.boardArticle import LinkValidate
 from flask_jwt_extended import (
@@ -79,7 +78,7 @@ class Login(UserModel,Resource):
         elif is_user['respon_code'] == self.request_not_found:
             user_id = self.random_user_id
             # pool = self.pool()
-            connection = pool.get_conn()
+            connection = self.connection()
             cursor = connection.cursor()
             password_hash = self.set_password(password)
             sql = "INSERT INTO Users(email,nickname,pw,pw_hash,create_time,user_uuid) VALUES('{}','{}','{}','{}',now(),uuid())".format(email,user_id,password,password_hash)
@@ -90,7 +89,7 @@ class Login(UserModel,Resource):
             uuid = cursor.fetchone()['user_uuid']
             # connection.close()
             # cursor.close()
-            pool.release(connection)
+            connection.close()
             return {
                     'access_token': create_access_token(identity=uuid),
                     'refresh_token': create_refresh_token(identity=uuid)
@@ -125,7 +124,7 @@ class Login(UserModel,Resource):
 #         username = data['username']
 #         password = data['password']
 #         # pool = self.pool()
-#         connection = pool.get_conn()
+#         connection = self.connection()
 #         cursor = connection.cursor()
 #         sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
 #         cursor.execute(sql)

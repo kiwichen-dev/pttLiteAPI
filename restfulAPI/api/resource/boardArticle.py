@@ -1,5 +1,5 @@
 from flask import jsonify, request, current_app
-from api import InitAPP,pool
+from api import InitAPP
 from api.model.boardArticle import LinkValidate
 from flask_restful import Resource, reqparse
 import re
@@ -10,7 +10,7 @@ class Index(LinkValidate, Resource):
         index = dict()
         distinct_board_name_top = list()
         # pool = self.pool()
-        connection = pool.get_conn()
+        connection = self.connection()
         if connection:
             sql = "SELECT DISTINCT board_name FROM Category"
             cursor = connection.cursor()
@@ -30,7 +30,7 @@ class Index(LinkValidate, Resource):
             index['top_8_amount_of_likes_boards'] = top_8_amount_of_likes_boards
             # connection.close()
             # cursor.close()
-            pool.release(connection)
+            connection.close()
             return jsonify(index)
         else:
             return {'msg':'MySQL offline'},500
@@ -40,7 +40,7 @@ class Board(LinkValidate, Resource):
         res = self.is_link(board_name)
         if res['respon_code'] == self.request_sucess:
             # pool = self.pool()
-            connection = pool.get_conn()
+            connection = self.connection()
             if connection:
                 sql = "SELECT * FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
                 cursor = connection.cursor()
@@ -49,7 +49,7 @@ class Board(LinkValidate, Resource):
                 package['board'] = cursor.fetchall()
                 # connection.close()
                 # cursor.close()
-                pool.release(connection)
+                connection.close()
                 return jsonify(package)
             else:
                 return {'msg':'MySQL offline'},500
@@ -61,7 +61,7 @@ class Board(LinkValidate, Resource):
 class AllBoards(LinkValidate, Resource):
     def get(self):
         # pool = self.pool()
-        connection = pool.get_conn()
+        connection = self.connection()
         if connection:
             cursor = connection.cursor()
             cursor.execute('SELECT * FROM Category')
@@ -71,7 +71,7 @@ class AllBoards(LinkValidate, Resource):
             package['all_boards'] = category
             # connection.close()
             # cursor.close()
-            pool.release(connection)
+            connection.close()
             return jsonify(package)
         else:
             return {'msg':'MySQL offline'},500
@@ -81,7 +81,7 @@ class ArticlePage(LinkValidate, Resource):
         res = self.is_link(board_name,article_number)
         if res['respon_code'] == self.request_sucess:
             # pool = self.pool()
-            connection = pool.get_conn()
+            connection = self.connection()
             if connection:
                 cursor = connection.cursor()
                 article_fetch = res['respon_content']
@@ -111,7 +111,7 @@ class ArticlePage(LinkValidate, Resource):
                 article_page['article_page'] = article
                 # connection.close()
                 # cursor.close()
-                pool.release(connection)
+                connection.close()
                 return jsonify(article_page)
             else:
                 return {'msg':'MySQL offline'},500
@@ -125,7 +125,7 @@ def search():
     if request.method == 'POST':
         keyWord = request.form.get('keyWord')
         # pool = self.pool()
-        connection = pool.get_conn()
+        connection = self.connection()
         cursor = connection.cursor()
         sql = "SELECT * FROM Articles WHERE title LIKE '%s'" % (
             '%' + keyWord + '%')
@@ -133,13 +133,13 @@ def search():
         searchingResult = cursor.fetchall()
         # connection.close()
         # cursor.close()
-        pool.release(connection)
+        connection.close()
         return jsonify('search.html', searchingResult=searchingResult)
 
 class BoardToList(LinkValidate, Resource):
     def get(self):
         # pool = self.pool()
-        connection = pool.get_conn()
+        connection = self.connection()
         cursor = connection.cursor()
         sql = "SELECT DISTINCT board_name FROM Category ORDER BY board_name ASC"
         cursor.execute(sql)
@@ -151,13 +151,13 @@ class BoardToList(LinkValidate, Resource):
             i += 1
         # connection.close()
         # cursor.close()
-        pool.release(connection)
+        connection.close()
         return jsonify(board_to_list)
 
 class Article_Left_Join(LinkValidate, Resource):
     def get(self, board, article_number):
         # pool = self.pool()
-        connection = pool.get_conn()
+        connection = self.connection()
         cursor = connection.cursor()
         sql = "SELECT * FROM Articles WHERE board_name = '%s' AND article_number = '%s'" % (
             board, article_number)
@@ -203,19 +203,19 @@ class Article_Left_Join(LinkValidate, Resource):
             article['discussions'] = reply_from_pttLite
             # connection.close()
             # cursor.close()
-            pool.release(connection)
+            connection.close()
             return jsonify(article)
 
         else:
             # connection.close()
             # cursor.close()
-            pool.release(connection)
+            connection.close()
             return {'message': 'article not found'}, 404
 
 class ArticleContent(LinkValidate,Resource):
     def get(self,board_name,article_number):
         # pool = self.pool()
-        connection = pool.get_conn()
+        connection = self.connection()
         if connection:
             sql = "SELECT content FROM Articles WHERE board_name = '{}' AND article_number = '{}' ".format(board_name,article_number)
             cursor = connection.cursor()
