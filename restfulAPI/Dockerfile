@@ -1,12 +1,12 @@
-FROM ubuntu:18.04
+# FROM ubuntu:18.04
 
-#FROM python:3.7.7-stretch
+FROM python
 
 WORKDIR /restfulAPI
 
 ADD . /restfulAPI
 
-RUN cat /etc/os-release
+# RUN cat /etc/os-release
 
 RUN apt-get update \
      && apt-get install python3 -y --assume-yes apt-utils \
