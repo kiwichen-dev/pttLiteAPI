@@ -1,6 +1,6 @@
 # FROM ubuntu:18.04
 
-FROM python:latest
+FROM python:3.8.6
 
 WORKDIR /restfulAPI
 
@@ -14,8 +14,8 @@ ADD . /restfulAPI
 #      && apt-get install ipython3 -y --assume-yes apt-utils \
 #      && pip3 install -r requirements.txt
 
-RUN apt update \
-     && apt upgrade -y\
+RUN apt-get update \
+     && apt-get upgrade -y\
      && pip install --upgrade pip \
      && pip install -r requirements.txt
 
