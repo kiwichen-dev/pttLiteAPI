@@ -58,7 +58,7 @@ class Login(UserModel,Resource):
         password = data['password']
 
         is_user = self.isUser(email)
-        if is_user['respon_code'] == self.request_sucess:
+        if is_user['respon_code'] == self.resource_found:
             res = self.validate_password(email,password)
             if res['respon_code'] == self.valid:
                 uuid = res['respon_content']
@@ -67,17 +67,11 @@ class Login(UserModel,Resource):
                     'access_token': create_access_token(identity=uuid),
                     'refresh_token': create_refresh_token(identity=uuid)
                 }, 200
-            elif res['respon_code'] == self.invalid:
-                return {'msg':'Wrong email or password '},401
-            elif res['respon_code'] == self.mysql_offline:
-                return {'msg':'MySQL offline'},500
-            elif res['respon_code'] == self.mysql_error:
-                return {'msg':'MySQL error'},500
             else:
-                return {'msg':'Get an error'},500
-        elif is_user['respon_code'] == self.request_not_found:
+                return self.analysis_return(res)
+
+        elif is_user['respon_code'] == self.resource_not_found:
             user_id = self.random_user_id
-            # pool = self.pool()
             connection = self.connection()
             cursor = connection.cursor()
             password_hash = self.set_password(password)
@@ -87,8 +81,6 @@ class Login(UserModel,Resource):
             sql = "SELECT user_uuid FROM Users WHERE nickname = '{}'".format(user_id)
             cursor.execute(sql)
             uuid = cursor.fetchone()['user_uuid']
-            # connection.close()
-            # cursor.close()
             connection.close()
             return {
                     'access_token': create_access_token(identity=uuid),
@@ -96,48 +88,6 @@ class Login(UserModel,Resource):
                 }, 201
         else:
             return self.analysis_return(is_user)
-
-# class Protected(Resource):
-#     @jwt_required
-#     def get(self):
-#         identity = get_jwt_identity()
-#         return {
-#             'identity': identity
-#         }, 200
-
-# class Register(UserModel,Resource):
-#     def post(self):
-#         parser = reqparse.RequestParser()
-#         parser.add_argument(
-#             'email', type=str, required=True, help='required email'
-#         )
-#         parser.add_argument(
-#             'username', type = self.min_length_str(4), required=True,
-#             help='username require'
-#         )
-#         parser.add_argument(
-#             'password', type = self.min_length_str(8), required=True,
-#             help='password error'
-#         )
-#         data = parser.parse_args()
-#         email = data['email']
-#         username = data['username']
-#         password = data['password']
-#         # pool = self.pool()
-#         connection = self.connection()
-#         cursor = connection.cursor()
-#         sql = "SELECT * FROM users WHERE nickname = '%s'" % (username)
-#         cursor.execute(sql)
-#         if cursor.fetchone():
-#             cursor.close()
-#             return {'message': 'user already exist'},401
-#         else:
-#             password_hash = self.set_password(password)
-#             sql = "INSERT INTO users(nickname,email,pw,pw_hash) VALUES('%s','%s','%s','%s')" % (username,email,password,password_hash)
-#             cursor.execute(sql)
-#             connection.commit()
-#             cursor.close()
-#             return {'message':'user has been created'}, 201
 
 class ForgotPassword(UserModel,Resource):
     def post(self):

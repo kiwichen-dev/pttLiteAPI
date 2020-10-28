@@ -34,10 +34,10 @@ class Index(LinkValidate, Resource):
 class Board(LinkValidate, Resource):
     def get(self, board_name, order_by='create_time', limit='200'):
         res = self.is_link(board_name)
-        if res['respon_code'] == self.request_sucess:
+        if res['respon_code'] == self.resource_found:
             connection = self.connection()
             if connection:
-                sql = "SELECT board_name,article_number,article_url,title,author,author_ip,ip_location,content_shapshot,\
+                sql = "SELECT board_name,article_number,article_url,title,author,author_ip,ip_location,content_snapshot,\
                         amount_of_discussions,amount_of_likes,amount_of_neutrals,amount_of_dislikes,create_time \
                         FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
                 cursor = connection.cursor()
@@ -48,7 +48,7 @@ class Board(LinkValidate, Resource):
                 return jsonify(package)
             else:
                 return {'msg':'MySQL offline'},500
-        elif res['respon_code'] == self.request_not_found:
+        elif res['respon_code'] == self.resource_not_found:
             return {'msg': 'Board not found'}, 404
         else:
             return {'msg':'Get an error'},500
@@ -70,7 +70,7 @@ class AllBoards(LinkValidate, Resource):
 class ArticlePage(LinkValidate, Resource):
     def get(self, board_name, article_number):
         res = self.is_link(board_name,article_number)
-        if res['respon_code'] == self.request_sucess:
+        if res['respon_code'] == self.resource_found:
             connection = self.connection()
             if connection:
                 cursor = connection.cursor()
@@ -103,10 +103,8 @@ class ArticlePage(LinkValidate, Resource):
                 return jsonify(article_page)
             else:
                 return {'msg':'MySQL offline'},500
-        elif res['respon_code'] == self.request_not_found:
-            return {'msg': 'Article not found'}, 404
         else:
-            return {'msg':'Get an error'},500
+            return self.analysis_return(res)
 
 def search():
     cursor = connection.cursor()
@@ -174,24 +172,9 @@ class Article_Left_Join(LinkValidate, Resource):
             article['push_count'] = article_content['push_count']
             article['create_time'] = str(article_content['create_time'])
             article['discussions'] = reply_from_pttLite
-            # connection.close()
-            # cursor.close()
             connection.close()
             return jsonify(article)
 
         else:
-            # connection.close()
-            # cursor.close()
             connection.close()
             return {'message': 'article not found'}, 404
-
-class ArticleContent(LinkValidate,Resource):
-    def get(self,board_name,article_number):
-        # pool = self.pool()
-        connection = self.connection()
-        if connection:
-            sql = "SELECT content FROM Articles WHERE board_name = '{}' AND article_number = '{}' ".format(board_name,article_number)
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            res = cursor.fetchone()['content']
-            return jsonify(res)

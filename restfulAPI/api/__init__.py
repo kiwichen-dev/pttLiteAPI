@@ -23,16 +23,6 @@ mail = Mail(app)
 mail.init_app(app)
 api = Api(app)
 jwt = JWTManager(app)
-# pool = Pool(
-#     host=PymysqlConfig.host,
-#     port=PymysqlConfig.port,
-#     user=PymysqlConfig.user,
-#     password=PymysqlConfig.password,
-#     db=PymysqlConfig.db
-# )
-# pool.init()
-
-
 blacklist = set()
 
 @jwt.token_in_blacklist_loader
@@ -45,13 +35,17 @@ class InitAPP():
         self.mysql_offline = int(0)
         self.mysql_is_working = int(1)
         self.mysql_error = int(2)
-        self.request_sucess = int(3)
-        self.request_not_found = int(4)
-        self.valid = int(5)
-        self.invalid = int(6)  
+        self.resource_found = int(3)
+        self.resource_not_found = int(4)
+        self.post_success = int(5)
+        self.put_success = int(6)
+        self.delete_success = int(7)
+        self.valid = int(8)
+        self.invalid = int(9)
         self.mysql_respon = dict()
         self.mysql_respon['respon_code'] = None
         self.mysql_respon['respon_content'] = None
+        self.mysql_respon['sql'] = None
     
     @staticmethod
     def connection():
@@ -66,31 +60,23 @@ class InitAPP():
         )
         return connection
 
-    # @staticmethod
-    # def pool():
-    #     try:
-    #         pool = Pool(
-    #             host=PymysqlConfig.host,
-    #             port=PymysqlConfig.port,
-    #             user=PymysqlConfig.user,
-    #             password=PymysqlConfig.password,
-    #             db=PymysqlConfig.db
-    #         )
-    #         pool.init()
-    #     except:
-    #         print('MySQL連線失敗')
-    #         return None
-    #     else:
-    #         return pool
     @property
     def random_user_id(self):
         return ''.join(random.sample(string.ascii_letters + string.digits, 8))
 
     def analysis_return(self,res):
-        if res['respon_code'] == self.request_sucess:
-            return {'msg':'Sucess'},201
-        elif res['respon_code'] == self.request_not_found:
-            return {'msg':'Not found'},404
+        if res['respon_code'] == self.resource_found:
+            return {'msg':'Resource found'},200
+        elif res['respon_code'] == self.resource_not_found:
+            return {'msg':'Resource not found'},404
+        elif res['respon_code'] == self.post_success:
+            return {'msg':'Post success'},201
+        elif res['respon_code'] == self.put_success:
+            return {'msg':'Put success'},201
+        elif res['respon_code'] == self.delete_success:
+            return {'msg':'Delete success'},201
+        elif res['respon_code'] == self.invalid:
+                return {'msg':'Wrong email or password '},401
         elif res['respon_code'] == self.mysql_offline:
             return {'msg':'MySQL offline'},500
         elif res['respon_code'] == self.mysql_error:
@@ -99,56 +85,34 @@ class InitAPP():
             return {'msg':'Get an error'},500
 
     def db_commit_rollback(self,res):
-        if res['respon_code'] == self.request_sucess:
-            # pool = self.pool()
-            connection = self.connection()
-            if connection:
-                cursor = connection.cursor()
-                try:
-                    cursor.execute(sql)
-                    connection.commit()
-                    connection.close()
-                    cursor.close()
-                except:
-                    try:
-                        connection.rollback()
-                        connection.close()
-                        cursor.close()
-                    except:
-                        pass
-                    else:
-                        pass
-                    finally:
-                        pass
-                    res['respon_code'] == self.mysql_error
-                    return res
-                else:
-                    return res
+        connection = self.connection()
+        cursor = connection.cursor()
+        try:
+            sql = res['sql']
+            cursor.execute(sql)
+            connection.commit()
+            connection.close()
+        except:
+            try:
+                connection.rollback()
+                connection.close()
+            except:
+                pass
             else:
-                res['respon_code'] == self.mysql_offline
-                return res
-        return res #回傳respon_code不更動
+                pass
+            finally:
+                pass
+            res['respon_code'] = self.mysql_error
+            return res
+        else:
+            res['respon_code'] = self.post_success
+            return res
 
-    # def refreshBoards(self,board_name):
-    #     # pool = self.pool()
-    #     cursor = connection.cursor()
-    #     sql = "SELECT * FROM articles WHERE board_name = '%s'" % (board_name)
-    #     cursor.execute(sql)
-    #     query_result = cursor.fetchall()
-    #     if query_result:
-    #         package = dict()
-    #         package['board'] = query_result
-    #         connection.close()
-    #         cursor.close()
-    #         return jsonify(package)
-    #     else:
-    #         connection.close()
-    #         cursor.close()
-    #         return None
+        #return res #回傳respon_code不更動
 
 from api.resource.user import Login, FollowBoard, FollowArticle, GetFollowingArticles, GetFollowingBoards, Discuss,\
     Reply, ForgotPassword, ResetPassword,ChangePassword, RefreshToken, UploadImg, MemberCenter, LogoutAccessToken, LogoutRefreshToken
-from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board, ArticleContent
+from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board
 
 class App(InitAPP):
     @staticmethod
@@ -157,10 +121,7 @@ class App(InitAPP):
         api.add_resource(AllBoards,'/boards')
         api.add_resource(Board, '/board/<string:board_name>')
         api.add_resource(ArticlePage, '/<string:board_name>/<string:article_number>')
-        api.add_resource(ArticleContent,'/article_content/<string:board_name>/<string:article_number>')
         # api.add_resource(Article_Left_Join,'/left_join/<string:board>/<string:article_number>')
-        # api.add_resource(Register,'/register')
-        # api.add_resource(BoardToList,'/boardtolist')
         api.add_resource(Login, '/login')
         api.add_resource(FollowBoard, '/follow/<string:board_name>')
         api.add_resource(GetFollowingBoards,'/following_boards')

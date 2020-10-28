@@ -32,7 +32,6 @@ class UserModel(LinkValidate):
         return generate_password_hash(password)
 
     def validate_password(self,email,password):
-        # pool = self.pool()
         connection = self.connection()
         if connection:
             try:
@@ -42,8 +41,6 @@ class UserModel(LinkValidate):
                 res = cursor.fetchone()
                 password_hash = res['pw_hash']
                 uuid = res['user_uuid']
-                # connection.close()
-                # cursor.close()
                 connection.close()
             except:
                 connection.rollback()
@@ -63,147 +60,90 @@ class UserModel(LinkValidate):
 
     def get_user_data(self,email):
         sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
         res = cursor.fetchone()
         connection.commit()
-        # cursor.close()
         connection.close()
         return res
 
     def get_user_by_uuid(self,uuid):
         sql = "SELECT * FROM Users WHERE user_uuid = '{}'".format(uuid)
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
         res = cursor.fetchone()
         connection.commit()
-        # cursor.close()
         connection.close()
         return res
 
     def follow(self,*args):
         if len(args) == int(1):
             sql = ''
+            
         elif len(args) == int(2):
-            sql = "INSERT INTO FollowingBoards (user_uuid,board_name,create_time) VALUES ('{}','{}',now())".format(args[0],args[1])
+            res = dict()
             res = self.is_link(args[1])
+            if res['respon_code'] == self.resource_found:
+                sql = "SELECT * FROM FollowingBoards WHERE user_uuid='{}' AND board_name ='{}'".format(args[0],args[1])
+                connection = self.connection()
+                cursor = connection.cursor()
+                cursor.execute(sql)
+
+                if cursor.fetchone():
+                    res['sql'] = "DELETE FROM FollowingBoards WHERE user_uuid='{}'AND board_name ='{}'".format(args[0],args[1])
+                    self.db_commit_rollback(res)
+                    res['respon_code'] = self.delete_success
+                    return res
+                else:
+                    res['sql'] = sql = "INSERT INTO FollowingBoards(user_uuid,board_name,create_time) VALUES('{}','{}',now())".format(args[0],args[1])
+                    self.db_commit_rollback(res)
+                    res['respon_code'] = self.post_success
+                    return res
+            else:
+                res
+
         elif len(args) == int(3):
-            article_url = "/" + args[1] + "/" + args[2]
-            sql = "INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(args[0],article_url,args[1],args[2])
             res = self.is_link(args[1],args[2])
+            article_url = "/" + args[1] + "/" + args[2]
+            if res['respon_code'] == self.resource_found:
+                sql = "SELECT * FROM FollowingArticles WHERE user_uuid='{}' AND article_url ='{}'".format(args[0],article_url)
+                connection = self.connection()
+                cursor = connection.cursor()
+                cursor.execute(sql)
+
+                if cursor.fetchone():
+                    res['sql'] = "DELETE FROM FollowingArticles WHERE user_uuid='{}' AND article_url ='{}'".format(args[0],article_url)
+                    self.db_commit_rollback(res)
+                    res['respon_code'] = self.delete_success
+                    return res
+                else:
+                    res['sql'] ="INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(args[0],article_url,args[1],args[2])
+                    self.db_commit_rollback(res)
+                    res['respon_code'] = self.post_success
+                    return res
         else:
             return self.mysql_error
-        
         return self.db_commit_rollback(res)
-        # if res['respon_code'] == self.request_sucess:
-        #     # pool = self.pool()
-        #     connection = self.connection()
-        #     if connection:
-        #         cursor = connection.cursor()
-        #         try:
-        #             cursor.execute(sql)
-        #             connection.commit()
-        #             connection.close()
-        #             cursor.close()
-        #         except:
-        #             connection.rollback()
-        #             connection.close()
-        #             cursor.close()
-        #             res['respon_code'] == self.mysql_error
-        #             return res
-        #         else:
-        #             return res
-        #     else:
-        #         res['respon_code'] == self.mysql_offline
-        #         return res
-        # else:
-        #     return res
-
-    # def follow_board(self,uuid,board_name):
-    #     res = self.is_link(board_name)
-    #     if res['respon_code'] == self.request_sucess:
-    #         # sql = "INSERT INTO FollowingBoards(user_uuid,board_name,create_time) VALUES( (SELECT user_uuid FROM users WHERE email ='{}'),'{}',NOW() )".format( email,board_name )
-    #         sql = "INSERT INTO FollowingBoards (user_uuid,board_name,create_time) VALUES ('{}','{}',now())".format(uuid,board_name)
-    #         # pool = self.pool()
-    #         connection = self.connection()
-    #         if connection:
-    #             cursor = connection.cursor()
-    #             try:
-    #                 cursor.execute(sql)
-    #                 connection.commit()
-    #             except:
-    #                 connection.rollback()
-    #                 connection.close()
-    #                 cursor.close()
-    #                 res['respon_code'] == self.mysql_error
-    #                 return res
-    #             else:
-    #                 connection.close()
-    #                 cursor.close()
-    #                 return res
-    #         else:
-    #             res['respon_code'] == self.mysql_offline
-    #             return res
-    #     else:
-    #         return res
-
-    # def follow_article(self,uuid,board_name,article_number):
-    #     res = self.is_link(board_name,article_number)
-    #     if res['respon_code'] == self.request_sucess:
-    #         article_url = "/" + board_name + "/" + article_number
-    #         # sql = "INSERT INTO FollowingArticles(id,article_url,board_name,article_number,create_time)\
-    #         #      VALUES( (SELECT id FROM users WHERE email ='{}'),'{}','{}','{}',NOW() )".format( email,article_url,board_name,article_number )
-    #         sql = "INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(uuid,article_url,board_name,article_number)
-    #         # pool = self.pool()
-    #         connection = self.connection()
-    #         if connection:
-    #             cursor = connection.cursor()
-    #             try:
-    #                 cursor.execute(sql)
-    #                 connection.commit()
-    #             except:
-    #                 connection.rollback()
-    #                 connection.close()
-    #                 cursor.close()
-    #                 res['respon_code'] == self.mysql_error
-    #                 return res
-    #             else:
-    #                 connection.close()
-    #                 cursor.close()
-    #                 return res
-    #         else:
-    #             res['respon_code'] == self.mysql_offline
-    #             return res
-    #     else:
-    #         return res
 
     def get_following_boards(self,uuid):
         # sql = "SELECT board_name,create_time FROM FollowingBoards WHERE user_uuid = (SELECT id FROM users WHERE email ='{}')".format(email)
         sql = "SELECT * FROM FollowingBoards WHERE user_uuid = '{}'".format(uuid)
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
         res = cursor.fetchall()
-        # connection.close()
-        # cursor.close()
         connection.close()
         return res
 
     def get_following_articles(self,uuid):
         # sql = "SELECT article_url,create_time FROM FollowingArticles WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
         sql = "SELECT * FROM FollowingArticles WHERE user_uuid = '{}'".format(uuid)
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
         res = cursor.fetchall()
-        # connection.close()
-        # cursor.close()
         connection.close()
         return res
 
@@ -230,6 +170,7 @@ class UserModel(LinkValidate):
                     args[5]
                 )
                 res = self.is_link(args[0],args[1])
+                res['sql'] = sql
         elif len(args) == int(7):
                 sql = \
                 "INSERT INTO ReplyFromPttLite(\
@@ -253,111 +194,13 @@ class UserModel(LinkValidate):
                     args[6]
                 )
                 res = self.is_link(args[0],args[1],args[2])
-        else:
-            return self.mysql_error
+                res['sql'] = sql
 
         return self.db_commit_rollback(res)
-        # if res['respon_code'] == self.request_sucess:
-        #     # pool = self.pool()
-    # connection = self.connection()
-        #     if connection:
-        #         cursor = connection.cursor()
-        #         try:
-        #             cursor.execute(sql)
-        #             connection.commit()
-        #             connection.close()
-        #             cursor.close()
-        #         except:
-        #             connection.rollback()
-        #             connection.close()
-        #             cursor.close()
-        #             res['respon_code'] == self.mysql_error
-        #             return res
-        #         else:
-        #             return res
-        #     else:
-        #         res['respon_code'] == self.mysql_offline
-        #         return res
-        # return res
-    
-    # def discuss(self,board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip):
-    #     # pool = self.pool()
-    #     connection = self.connection()
-    #     if LinkValidate.vaildate_article(board_name,article_number) == self.request_sucess:
-    #         if connection:
-    #             sql = \
-    #             "INSERT INTO ArticleDiscussions(\
-    #                 from_pttLite,\
-    #                 board_name,\
-    #                 article_number,\
-    #                 respone_type,\
-    #                 respone_user_id,\
-    #                 discussion,\
-    #                 respone_user_ip,\
-    #                 create_time,\
-    #                 last_update\
-    #                 )\
-    #             VALUES(true,'{}','{}','{}','{}','{}','{}',NOW(),NOW())".format(
-    #                 board_name,
-    #                 article_number,
-    #                 respone_type,
-    #                 respone_user_id,
-    #                 discussion,
-    #                 respone_user_ip
-    #             )
-    #             cursor = connection.cursor()
-    #             cursor.execute(sql)
-    #             connection.commit()
-    #             return self.request_sucess
-    #         else:
-    #             return self.mysql_offline
-    #     return self.request_not_found
 
-    # def reply(self,articleDiscussions_nu,board_name,article_number,respone_type,respone_user_id,reply,respone_user_ip):
-    #     # pool = self.pool()
-    #     connection = self.connection()
-    #     res = LinkValidate.vaildate_discussion(articleDiscussions_nu,board_name,article_number)
-    #     if res == self.request_sucess:
-    #         if connection:
-    #             sql = \
-    #             "INSERT INTO ReplyFromPttLite(\
-    #                 articleDiscussions_nu,\
-    #                 board_name,\
-    #                 article_number,\
-    #                 respone_type,\
-    #                 respone_user_id,\
-    #                 reply,\
-    #                 respone_user_ip,\
-    #                 create_time,\
-    #                 last_update\
-    #                 )\
-    #             VALUES({},'{}','{}','{}','{}','{}','{}',now(),now())".format(
-    #                 articleDiscussions_nu,
-    #                 board_name,
-    #                 article_number,
-    #                 respone_type,
-    #                 respone_user_id,
-    #                 reply,
-    #                 respone_user_ip
-    #             )
-    #             # pool = self.pool()
-    #             connection = self.connection()
-    #             cursor = connection.cursor()
-    #             cursor.execute(sql)
-    #             connection.commit()
-    #             return self.request_sucess
-    #         return self.mysql_offline
-
-    #     elif res == self.request_not_found:
-    #         return self.request_not_found
-
-    #     elif res == self.mysql_offline:
-    #         return self.mysql_offline
-    
     def forgot_password(self,email):
         try:
             sql = "SELECT user_uuid FROM Users WHERE email = '{}'".format(email)
-            # pool = self.pool()
             connection = self.connection()
             cursor = connection.cursor()
             cursor.execute(sql)
@@ -368,15 +211,11 @@ class UserModel(LinkValidate):
             print(e)
             try:
                 connection.rollback()
-                # connection.close()
-                # cursor.close()
                 connection.close()
             except Exception as e:
                 print(e)
                 return isSucess
         else:
-            # connection.close()
-            # cursor.close()
             connection.close()
             if uuid:
                 access_token = create_access_token(identity=uuid)
@@ -397,14 +236,11 @@ class UserModel(LinkValidate):
     
     def vaildate_token(self,token):
         uuid = decode_token(token)['identity']
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         sql = "SELECT * FROM Users WHERE user_uuid = '{}' ".format(uuid)
         cursor.execute(sql)
         res = cursor.fetchone()
-        # connection.close()
-        # cursor.close()
         connection.close()
         if res:
             return True,uuid
@@ -425,7 +261,6 @@ class UserModel(LinkValidate):
             uuid = vaild[1]
             try:
                 sql = "UPDATE Users SET pw = '{}', pw_hash = '{}' WHERE user_uuid = '{}'".format(password,password_hash,uuid)
-                # pool = self.pool()
                 connection = self.connection()
                 cursor = connection.cursor()
                 cursor.execute(sql)
@@ -436,8 +271,6 @@ class UserModel(LinkValidate):
                 print(e)
                 connection.rollback()
             else:
-                # connection.close()
-                # cursor.close()
                 connection.close()
             finally:
                 return isSucess
@@ -448,7 +281,6 @@ class UserModel(LinkValidate):
         password_hash = self.set_password(password)
         try:
             sql = "UPDATE Users SET pw = '{}', pw_hash = '{}' WHERE user_uuid = '{}'".format(password,password_hash,uuid)
-            # pool = self.pool()
             connection = self.connection()
             cursor = connection.cursor()
             cursor.execute(sql)
@@ -459,8 +291,6 @@ class UserModel(LinkValidate):
             print(e)
             connection.rollback()
         else:
-            # connection.close()
-            # cursor.close()
             connection.close()
         finally:
             return isSucess
@@ -472,7 +302,6 @@ class UserModel(LinkValidate):
         return token
 
     def isUser(self,email):
-        # pool = self.pool()
         connection = self.connection()
         if connection:
             try:
@@ -480,8 +309,6 @@ class UserModel(LinkValidate):
                 sql = "SELECT * FROM Users WHERE email = '{}'".format(email)
                 cursor.execute(sql)
                 res = cursor.fetchone()
-                # connection.close()
-                # cursor.close()
                 connection.close()
             except:
                 connection.rollback()
@@ -489,10 +316,10 @@ class UserModel(LinkValidate):
                 return self.mysql_respon
             else:
                 if res:
-                    self.mysql_respon['respon_code'] = self.request_sucess
+                    self.mysql_respon['respon_code'] = self.resource_found
                     return self.mysql_respon
                 else:
-                    self.mysql_respon['respon_code'] = self.request_not_found
+                    self.mysql_respon['respon_code'] = self.resource_not_found
                     return self.mysql_respon
         else:
             self.mysql_respon['respon_code'] = self.mysql_offline
@@ -531,48 +358,36 @@ class UserModel(LinkValidate):
     
     def my_reply(self,uuid):
         sql = "SELECT * FROM ReplyFromPttLite WHERE respone_user_id = ( SELECT nickname FROM Users WHERE user_uuid = '{}' )".format(uuid)
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
         res = cursor.fetchall()
-        # connection.close()
-        # cursor.close()
         connection.close()
         return res
 
     def my_discussions(self,uuid):
         sql = "SELECT * FROM ArticleDiscussions WHERE respone_user_id = ( SELECT nickname FROM Users WHERE user_uuid = '{}' )".format(uuid)
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
         res = cursor.fetchall()
-        # connection.close()
-        # cursor.close()
         connection.close()
         return res
 
     def login_records(self,uuid):
         sql = "INSERT INTO LoginRecords(user_uuid,login_time,ip) VALUES('{}',now(),'111.111.111.111')".format(uuid)
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
         connection.commit()
-        # connection.close()
-        # cursor.close()
         connection.close()
 
     def get_login_records(self,uuid):
         sql = "SELECT login_time,ip FROM LoginRecords WHERE user_uuid = '{}'".format(uuid)
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
         res = cursor.fetchall()
-        # connection.close()
-        # cursor.close()
         connection.close()
         return res
 
@@ -585,7 +400,6 @@ class UserModel(LinkValidate):
         user_data['login_records'] = self.get_login_records(uuid)
 
         sql = "SELECT nickname,email FROM Users WHERE user_uuid = '{}'".format(uuid)
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
@@ -609,12 +423,8 @@ class UserModel(LinkValidate):
                 with open(r'{}'.format(icon_path), 'rb') as icon_path:
                     user_icon = base64.b64encode(icon_path.read())
                     user_data['user_icon'] = str(user_icon)
-                    # connection.close()
-                    # cursor.close()
                     connection.close()
                     return user_data
 
-        # connection.close()
-        # cursor.close()
         connection.close()
         return user_data

@@ -74,24 +74,24 @@ class LinkValidate(InitAPP):
             sql = "SELECT * FROM ArticleDiscussions WHERE nu = '{}' AND board_name = '{}' AND article_number = '{}'".format(args[0],args[1],args[2])
         else:
             return self.mysql_error
-        # pool = self.pool()
         connection = self.connection()
         if connection:
             cursor = connection.cursor()
             cursor.execute(sql)
             res = cursor.fetchone()
-            # connection.close()
-            # cursor.close()
             connection.close()
             if res:
-                self.mysql_respon['respon_code'] = self.request_sucess
+                self.mysql_respon['respon_code'] = self.resource_found
                 self.mysql_respon['respon_content'] = res
                 return self.mysql_respon
             else:
-                self.mysql_respon['respon_code'] = self.request_not_found
+                self.mysql_respon['respon_code'] = self.resource_not_found
                 return self.mysql_respon
         else:
             return self.mysql_offline
+
+    def is_following(self,):
+        sql = "SELECT * FROM FollowingBoards WHERE user_uuid='{}' AND board_name ='{}'".format(args[0],args[1])
 
     # def vaildate_board(self,board_name):
     #     connection = InitAPP.connection()
@@ -107,7 +107,7 @@ class LinkValidate(InitAPP):
     #             self.mysql_respon['respon_content'] = res
     #             return self.mysql_respon
     #         else:
-    #             self.mysql_respon['respon_code'] = self.request_not_found
+    #             self.mysql_respon['respon_code'] = self.resource_not_found
     #             return self.mysql_respon
     #     else:
     #         return self.__mysql_respon
@@ -126,7 +126,7 @@ class LinkValidate(InitAPP):
     #             self.mysql_respon['respon_content'] = res
     #             return self.mysql_respon
     #         else:
-    #             self.mysql_respon['respon_code'] = self.request_not_found
+    #             self.mysql_respon['respon_code'] = self.resource_not_found
     #             return self.mysql_respon
     #     else:
     #         return self.__mysql_respon
@@ -145,7 +145,7 @@ class LinkValidate(InitAPP):
     #             self.mysql_respon['respon_content'] = res
     #             return self.mysql_respon
     #         else:
-    #             self.mysql_respon['respon_code'] = self.request_not_found
+    #             self.mysql_respon['respon_code'] = self.resource_not_found
     #             return self.mysql_respon
     #     else:
     #         return self.__mysql_respon

@@ -13,7 +13,7 @@ class PymysqlConfig():
     user = 'flask'
     password = 'quQ351dTx'
     db = 'PTTLite'
-    charset = 'utf8'
+    charset = 'utf8mb4'
     port = int(3306)
     max_allowed_packet = '16M'
 
