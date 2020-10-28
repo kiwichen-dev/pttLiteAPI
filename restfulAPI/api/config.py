@@ -15,6 +15,7 @@ class PymysqlConfig():
     db = 'PTTLite'
     charset = 'utf8'
     port = int(3306)
+    max_allowed_packet = '16M'
 
 class Config():
     #JWT - General Options:

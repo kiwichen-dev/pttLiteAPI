@@ -61,6 +61,7 @@ class InitAPP():
         user=PymysqlConfig.user,
         password=PymysqlConfig.password,
         db=PymysqlConfig.db,
+        max_allowed_packet=PymysqlConfig.max_allowed_packet,
         cursorclass=pymysql.cursors.DictCursor
         )
         return connection

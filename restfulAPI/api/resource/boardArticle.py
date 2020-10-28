@@ -4,12 +4,10 @@ from api.model.boardArticle import LinkValidate
 from flask_restful import Resource, reqparse
 import re
 
-
 class Index(LinkValidate, Resource):
     def get(self):
         index = dict()
         distinct_board_name_top = list()
-        # pool = self.pool()
         connection = self.connection()
         if connection:
             sql = "SELECT DISTINCT board_name FROM Category"
@@ -28,8 +26,6 @@ class Index(LinkValidate, Resource):
             cursor.execute(sql)
             top_8_amount_of_likes_boards = cursor.fetchall()
             index['top_8_amount_of_likes_boards'] = top_8_amount_of_likes_boards
-            # connection.close()
-            # cursor.close()
             connection.close()
             return jsonify(index)
         else:
@@ -39,16 +35,15 @@ class Board(LinkValidate, Resource):
     def get(self, board_name, order_by='create_time', limit='200'):
         res = self.is_link(board_name)
         if res['respon_code'] == self.request_sucess:
-            # pool = self.pool()
             connection = self.connection()
             if connection:
-                sql = "SELECT * FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
+                sql = "SELECT board_name,article_number,article_url,title,author,author_ip,ip_location,content_shapshot,\
+                        amount_of_discussions,amount_of_likes,amount_of_neutrals,amount_of_dislikes,create_time \
+                        FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
                 cursor = connection.cursor()
                 cursor.execute(sql)
                 package = dict()
                 package['board'] = cursor.fetchall()
-                # connection.close()
-                # cursor.close()
                 connection.close()
                 return jsonify(package)
             else:
@@ -60,17 +55,13 @@ class Board(LinkValidate, Resource):
 
 class AllBoards(LinkValidate, Resource):
     def get(self):
-        # pool = self.pool()
         connection = self.connection()
         if connection:
             cursor = connection.cursor()
             cursor.execute('SELECT * FROM Category')
             category = cursor.fetchall()
-            # cursor.close()
             package = dict()
             package['all_boards'] = category
-            # connection.close()
-            # cursor.close()
             connection.close()
             return jsonify(package)
         else:
@@ -80,7 +71,6 @@ class ArticlePage(LinkValidate, Resource):
     def get(self, board_name, article_number):
         res = self.is_link(board_name,article_number)
         if res['respon_code'] == self.request_sucess:
-            # pool = self.pool()
             connection = self.connection()
             if connection:
                 cursor = connection.cursor()
@@ -109,8 +99,6 @@ class ArticlePage(LinkValidate, Resource):
                 article['discussions'] = article_discussions
                 article['reply_from_pttLite'] = reply_from_pttLite
                 article_page['article_page'] = article
-                # connection.close()
-                # cursor.close()
                 connection.close()
                 return jsonify(article_page)
             else:
@@ -124,21 +112,16 @@ def search():
     cursor = connection.cursor()
     if request.method == 'POST':
         keyWord = request.form.get('keyWord')
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
-        sql = "SELECT * FROM Articles WHERE title LIKE '%s'" % (
-            '%' + keyWord + '%')
+        sql = "SELECT * FROM Articles WHERE title LIKE '{}'".format('%' + keyWord + '%')
         cursor.execute(sql)
         searchingResult = cursor.fetchall()
-        # connection.close()
-        # cursor.close()
         connection.close()
         return jsonify('search.html', searchingResult=searchingResult)
 
 class BoardToList(LinkValidate, Resource):
     def get(self):
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
         sql = "SELECT DISTINCT board_name FROM Category ORDER BY board_name ASC"
@@ -149,37 +132,29 @@ class BoardToList(LinkValidate, Resource):
         for d in distinct_board_name:
             board_to_list[str(d['board_name'])] = str(i)
             i += 1
-        # connection.close()
-        # cursor.close()
         connection.close()
         return jsonify(board_to_list)
 
 class Article_Left_Join(LinkValidate, Resource):
     def get(self, board, article_number):
-        # pool = self.pool()
         connection = self.connection()
         cursor = connection.cursor()
-        sql = "SELECT * FROM Articles WHERE board_name = '%s' AND article_number = '%s'" % (
-            board, article_number)
+        sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board, article_number)
         cursor.execute(sql)
         if cursor.fetchone():
-            sql = "SELECT * FROM Articles WHERE article_number = '%s'" % (
-                article_number)
+            sql = "SELECT * FROM Articles WHERE article_number = '{}'".format(article_number)
             cursor.execute(sql)
             article_content = cursor.fetchone()
 
-            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '%s' and respone_type='推 '" % (
-                article_number)
+            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '{}' and respone_type='推 '".format(article_number)
             cursor.execute(sql)
             like = cursor.fetchone()
 
-            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '%s' and respone_type='→ '" % (
-                article_number)
+            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '{}' and respone_type='→ '".format(article_number)
             cursor.execute(sql)
             neutral = cursor.fetchone()
 
-            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '%s' and respone_type='噓 '" % (
-                article_number)
+            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '{}' and respone_type='噓 '".format(article_number)
             cursor.execute(sql)
             diskike = cursor.fetchone()
 
@@ -189,14 +164,12 @@ class Article_Left_Join(LinkValidate, Resource):
             reply_from_pttLite = cursor.fetchall()
 
             article = dict()
-            article['article_url'] = '/' + article_content['board_name'] + \
-                '/' + article_content['article_number']
+            article['article_url'] = '/' + article_content['board_name'] + '/' + article_content['article_number']
             article['board_name'] = article_content['board_name']
             article['article_number'] = article_content['article_number']
             article['title'] = article_content['title']
             article['author'] = article_content['author']
-            article['author_ip'] = article_content['author_ip'].split(
-                '(')[-1].replace(')', '')
+            article['author_ip'] = article_content['author_ip'].split('(')[-1].replace(')', '')
             article['body'] = article_content['body']
             article['push_count'] = article_content['push_count']
             article['create_time'] = str(article_content['create_time'])
