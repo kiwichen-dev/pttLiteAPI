@@ -1,5 +1,4 @@
 from flask import Flask, jsonify
-# from pymysqlpool.pool import Pool
 import pymysql.cursors
 from api.config import PymysqlConfig, Config
 #from flask_sqlalchemy import SQLAlchemy
@@ -11,6 +10,8 @@ from flask_mail import Mail
 from time import time
 import string
 import random
+import os
+
 """
 from flask_uploads import UploadSet, IMAGES, configure_uploads
 """
@@ -50,12 +51,12 @@ class InitAPP():
     @staticmethod
     def connection():
         connection = pymysql.connect(
-        host=PymysqlConfig.host,
-        port=PymysqlConfig.port,
-        user=PymysqlConfig.user,
-        password=PymysqlConfig.password,
-        db=PymysqlConfig.db,
-        max_allowed_packet=PymysqlConfig.max_allowed_packet,
+        host=os.environ['HOST'],
+        port=os.environ['PORT'],
+        user=os.environ['USER'],
+        password=os.environ['PASSWORD'],
+        db=os.environ['DB'],
+        max_allowed_packet=os.environ['MAX_ALLOWED_PACKET'],
         cursorclass=pymysql.cursors.DictCursor
         )
         return connection
