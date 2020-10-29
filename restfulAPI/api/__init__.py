@@ -52,7 +52,7 @@ class InitAPP():
     def connection():
         connection = pymysql.connect(
         host=os.environ['HOST'],
-        port=os.environ['PORT'],
+        port=int(os.environ['PORT']),
         user=os.environ['USER'],
         password=os.environ['PASSWORD'],
         db=os.environ['DB'],

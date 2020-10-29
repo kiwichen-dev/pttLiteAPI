@@ -6,24 +6,20 @@ services:
     container_name: PTTLite_API_DEV
     restart: always
     environment:
-      - HOST = "192.168.30.136"
-      - USER = "flask
-      - PASSWORD = "quQ351dTx"
-      - DB = 'PTTLite'
-      - CHARSET = "utf8mb4"
-      - PORT = 3306
-      - MAX_ALLOWED_PACKET = "16M"
-    volumes:
-      - .:/Restful_API_Folder
+      - HOST=192.168.31.194
+      - USER=flask
+      - PASSWORD=quQ351dTx
+      - DB=PTTLite
+      - CHARSET=utf8mb4
+      - PORT=3306
+      - MAX_ALLOWED_PACKET=16M
     ports:
-      - 8080:8080
+      - "8080:8080"
 
   nginx:
     build: ./nginx
     container_name: NginX_DEV
     restart: always
-    volumes:
-      - .:/NginX_Folder
     ports:
       - "80:80"
       - "443:443"
