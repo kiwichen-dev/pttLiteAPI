@@ -5,8 +5,10 @@ services:
     build: ./restfulAPI
     container_name: PTTLite_API_DEV
     restart: always
+    sysctls:
+      - net.core.somaxconn=4096
     environment:
-      - HOST=192.168.31.194
+      - HOST=192.168.30.136
       - USER=flask
       - PASSWORD=quQ351dTx
       - DB=PTTLite
@@ -14,12 +16,16 @@ services:
       - PORT=3306
       - MAX_ALLOWED_PACKET=16M
     ports:
-      - "8080:8080"
+      - 8080:8080
 
   nginx:
     build: ./nginx
     container_name: NginX_DEV
     restart: always
+    sysctls:
+      - net.core.somaxconn=4096
+    volumes:
+      - ~/mnt:/mnt
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443

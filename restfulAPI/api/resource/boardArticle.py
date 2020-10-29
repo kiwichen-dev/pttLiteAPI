@@ -7,29 +7,28 @@ import re
 class Index(LinkValidate, Resource):
     def get(self):
         index = dict()
-        distinct_board_name_top = list()
         connection = self.connection()
-        if connection:
-            sql = "SELECT DISTINCT board_name FROM Category"
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            distinct_board_name = cursor.fetchall()
-            for board_name in distinct_board_name:
-                sql = "SELECT * FROM Articles WHERE board_name = '{}' AND trim(content_snapshot)!='' ORDER BY amount_of_discussions DESC LIMIT 1".format(board_name['board_name'])
-                cursor.execute(sql)
-                res = cursor.fetchone()
-                if res:
-                    distinct_board_name_top.append(res)
-            index['articles'] = distinct_board_name_top
-            index['image'] = '/index.jpg'      
-            sql = "SELECT * FROM Top8AmountOfLikesBoards ORDER BY amount_of_likes DESC LIMIT 8"
-            cursor.execute(sql)
-            top_8_amount_of_likes_boards = cursor.fetchall()
-            index['top_8_amount_of_likes_boards'] = top_8_amount_of_likes_boards
-            connection.close()
-            return jsonify(index)
-        else:
-            return {'msg':'MySQL offline'},500
+        cursor = connection.cursor()
+        # distinct_board_name_top = list()
+        # sql = "SELECT DISTINCT board_name FROM Category"
+        # cursor = connection.cursor()
+        # cursor.execute(sql)
+        # distinct_board_name = cursor.fetchall()
+        # for board_name in distinct_board_name:
+        #     sql = "SELECT * FROM Articles WHERE board_name = '{}' AND trim(content_snapshot)!='' ORDER BY amount_of_discussions DESC LIMIT 1".format(board_name['board_name'])
+        #     cursor.execute(sql)
+        #     res = cursor.fetchone()
+        #     if res:
+        #         distinct_board_name_top.append(res)
+        sql = 'SELECT * FROM IndexArticles'
+        cursor.execute(sql)
+        index['articles'] = cursor.fetchall()
+        index['image'] = '/index.jpg'      
+        sql = "SELECT * FROM Top8AmountOfLikesBoards ORDER BY amount_of_likes DESC LIMIT 8"
+        cursor.execute(sql)
+        index['top_8_amount_of_likes_boards'] = cursor.fetchall()
+        connection.close()
+        return jsonify(index)
 
 class Board(LinkValidate, Resource):
     def get(self, board_name, order_by='create_time', limit='200'):

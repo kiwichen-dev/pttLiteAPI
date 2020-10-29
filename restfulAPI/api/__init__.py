@@ -1,6 +1,6 @@
 from flask import Flask, jsonify
 import pymysql.cursors
-from api.config import PymysqlConfig, Config
+from api.config import Config
 #from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 from api.model.JSONEncoder import CustomJSONEncoder
@@ -89,8 +89,7 @@ class InitAPP():
         connection = self.connection()
         cursor = connection.cursor()
         try:
-            sql = res['sql']
-            cursor.execute(sql)
+            cursor.execute(res['sql'])
             connection.commit()
             connection.close()
         except:
@@ -108,8 +107,6 @@ class InitAPP():
         else:
             res['respon_code'] = self.post_success
             return res
-
-        #return res #回傳respon_code不更動
 
 from api.resource.user import Login, FollowBoard, FollowArticle, GetFollowingArticles, GetFollowingBoards, Discuss,\
     Reply, ForgotPassword, ResetPassword,ChangePassword, RefreshToken, UploadImg, MemberCenter, LogoutAccessToken, LogoutRefreshToken

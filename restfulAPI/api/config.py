@@ -8,14 +8,14 @@ class SQLAlchemy_config():
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev')
     PTTLITE_PER_PAGE = os.environ.get('PTTLITE_PER_PAGE', 20)
 
-class PymysqlConfig():
-    host = '192.168.30.136'
-    user = 'flask'
-    password = 'quQ351dTx'
-    db = 'PTTLite'
-    charset = 'utf8mb4'
-    port = int(3306)
-    max_allowed_packet = '16M'
+# class PymysqlConfig():
+#     host = '192.168.30.136'
+#     user = 'flask'
+#     password = 'quQ351dTx'
+#     db = 'PTTLite'
+#     charset = 'utf8mb4'
+#     port = int(3306)
+#     max_allowed_packet = '16M'
 
 class Config():
     #JWT - General Options:
