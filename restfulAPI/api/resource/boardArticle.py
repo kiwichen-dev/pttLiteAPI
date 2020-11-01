@@ -45,20 +45,18 @@ class Board(LinkValidate, Resource):
         res = self.is_link(board_name)
         if res['respon_code'] == self.resource_found:
             connection = self.connection()
-            if connection:
-                sql = "SELECT board_name,article_number,article_url,title,author,author_ip,ip_location,content_snapshot,\
-                        amount_of_discussions,amount_of_likes,amount_of_neutrals,amount_of_dislikes,create_time \
-                        FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
-                cursor = connection.cursor()
-                cursor.execute(sql)
-                package = dict()
-                package['board'] = cursor.fetchall()
-                connection.close()
-                return jsonify(package)
-            else:
-                return {'msg':'MySQL offline'},500
+            # sql = "SELECT board_name,article_number,article_url,title,author,author_ip,ip_location,content_snapshot,\
+            #         amount_of_discussions,amount_of_likes,amount_of_neutrals,amount_of_dislikes,create_time \
+            #         FROM Articles WHERE board_name = '{}' ORDER BY {} DESC limit {}".format(board_name,order_by,limit)
+            sql = "SELECT * FROM DescCreateArticles WHERE board_name ='{}'".format(board_name)
+            cursor = connection.cursor()
+            cursor.execute(sql)
+            articles = dict()
+            articles['board'] = cursor.fetchall()
+            connection.close()
+            return jsonify(articles)
         elif res['respon_code'] == self.resource_not_found:
-            return {'msg': 'Board not found'}, 404
+            return {'msg': 'Board not found'},404
         else:
             return {'msg':'Get an error'},500
 
