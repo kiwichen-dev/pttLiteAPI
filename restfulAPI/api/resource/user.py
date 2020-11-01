@@ -19,6 +19,11 @@ class FollowBoard(UserModel,Resource):
         uuid = get_jwt_identity()
         res = self.follow(uuid,board_name)
         return self.analysis_return(res)
+    @jwt_required 
+    def delete(self,board_name):
+        uuid = get_jwt_identity()
+        res = self.unfollow(uuid,board_name)
+        return self.analysis_return(res)
 
 class FollowArticle(UserModel,Resource):
     @jwt_required 
@@ -26,22 +31,20 @@ class FollowArticle(UserModel,Resource):
         uuid = get_jwt_identity()
         res = self.follow(uuid,board_name,article_number)
         return self.analysis_return(res)
+    @jwt_required 
+    def delete(self,board_name,article_number):
+        uuid = get_jwt_identity()
+        res = self.unfollow(uuid,board_name,article_number)
+        return self.analysis_return(res)
 
-class GetFollowingArticles(UserModel,Resource):
+class Following(UserModel,Resource):
     @jwt_required
-    def post(self):
-        email = get_jwt_identity()
-        followe_articles = dict()
-        followe_articles['following_articles'] = self.get_following_articles(email)
-        return jsonify(followe_articles),200
-
-class GetFollowingBoards(UserModel,Resource):
-    @jwt_required
-    def post(self):
-        email = get_jwt_identity()
-        followe_boards = dict()
-        followe_boards['following_articles'] = self.get_following_boards(email)
-        return jsonify(followe_boards),200
+    def get(self):
+        uuid = get_jwt_identity()
+        following = dict()
+        following['following_boards'] = self.get_following_boards(uuid)
+        following['following_articles'] = self.get_following_articles(uuid)
+        return jsonify(following)
 
 class Login(UserModel,Resource):
     def post(self):
@@ -56,26 +59,28 @@ class Login(UserModel,Resource):
         data = parser.parse_args()
         email = data['email']
         password = data['password']
-
         is_user = self.isUser(email)
         if is_user['respon_code'] == self.resource_found:
             res = self.validate_password(email,password)
             if res['respon_code'] == self.valid:
                 uuid = res['respon_content']
                 self.login_records(uuid)
+                # user_privileges =  self.user_privileges(uuid)
+                # identity = list()
+                # identity.append(uuid)
+                # identity.append(user_privileges)
                 return {
                     'access_token': create_access_token(identity=uuid),
                     'refresh_token': create_refresh_token(identity=uuid)
                 }, 200
             else:
                 return self.analysis_return(res)
-
         elif is_user['respon_code'] == self.resource_not_found:
             user_id = self.random_user_id
             connection = self.connection()
             cursor = connection.cursor()
             password_hash = self.set_password(password)
-            sql = "INSERT INTO Users(email,nickname,pw,pw_hash,create_time,user_uuid) VALUES('{}','{}','{}','{}',now(),uuid())".format(email,user_id,password,password_hash)
+            sql = "INSERT INTO Users(email,nickname,pw,pw_hash,user_privileges,create_time,user_uuid) VALUES('{}','{}','{}','{}','user',now(),uuid())".format(email,user_id,password,password_hash)
             cursor.execute(sql)
             connection.commit()
             sql = "SELECT user_uuid FROM Users WHERE nickname = '{}'".format(user_id)
@@ -136,6 +141,10 @@ class ChangePassword(UserModel,Resource):
 
 class Discuss(UserModel,Resource):
     @jwt_required
+    def get(self):
+        uuid = get_jwt_identity()
+        return jsonify(self.my_discussions(uuid))
+    @jwt_required
     def post(self):
         uuid = get_jwt_identity()
         parser = reqparse.RequestParser()
@@ -163,12 +172,16 @@ class Discuss(UserModel,Resource):
         respone_user_ip = data['respone_user_ip']
         res = self.discuss_or_reply(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
         return self.analysis_return(res)
-
     @jwt_required
     def put(self):
         pass
 
 class Reply(UserModel,Resource):
+    @jwt_required
+    def get(self):
+        uuid = get_jwt_identity()
+        return jsonify(self.my_reply(uuid))
+
     @jwt_required
     def post(self):
         uuid = get_jwt_identity()
@@ -213,10 +226,6 @@ class RefreshToken(UserModel,Resource):
             return {'msg':'invaild token'},401
 
 class UploadImg(UserModel,Resource):
-    # def __init__(self):
-    #     self.parser = reqparse.RequestParser()
-    #     self.parser.add_argument('imgFile', required=True, type=FileStorage,location='files',help="imgFile is wrong.")
-        
     @jwt_required
     def post(self):
         uuid = get_jwt_identity()
@@ -225,32 +234,11 @@ class UploadImg(UserModel,Resource):
         else:
             return {'msg':'png,jpg,jpeg only'}, 400
 
-    #     email = get_jwt_identity()
-    #     parser = reqparse.RequestParser()
-    #     parser.add_argument('userIcon', required=True, type=FileStorage,location='files',help="imgFile is wrong.")
-    #     img_file = parser.parse_args().get('userIcon')
-    #     if self.is_allowed_file(img_file):
-    #         dirname = 'imgs/{}/icon'.format(email)
-    #         os.makedirs(dirname,mode=0o777,exist_ok=True)
-    #         save_path = os.path.join(dirname, img_file.filename)
-    #         img_file.save(save_path)
-    #         return {'msg':'sucess'}, 201
-    #     else:
-    #         return {'msg':'png,jpg,jpeg only'}, 400
-    
-    # def is_allowed_file(self,uploadFile):
-    #     if '.' in uploadFile.filename:
-    #         ext = uploadFile.filename.rsplit('.', 1)[1].lower()
-    #         if ext in {'png','jpg', 'jpeg'}:
-    #             return True
-    #     else:
-    #         return False
-
 class MemberCenter(UserModel,Resource):
     @jwt_required
     def post(self):
         uuid = get_jwt_identity()
-        return jsonify( self.member_data(uuid) )
+        return jsonify(self.member_data(uuid))
 
 class LogoutAccessToken(UserModel,Resource):
     @jwt_required

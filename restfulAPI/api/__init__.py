@@ -1,7 +1,6 @@
 from flask import Flask, jsonify
 import pymysql.cursors
 from api.config import Config
-#from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 from api.model.JSONEncoder import CustomJSONEncoder
 from flask_jwt_extended import JWTManager
@@ -11,10 +10,7 @@ from time import time
 import string
 import random
 import os
-
-"""
-from flask_uploads import UploadSet, IMAGES, configure_uploads
-"""
+# from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.json_encoder = CustomJSONEncoder
@@ -108,9 +104,9 @@ class InitAPP():
             res['respon_code'] = self.post_success
             return res
 
-from api.resource.user import Login, FollowBoard, FollowArticle, GetFollowingArticles, GetFollowingBoards, Discuss,\
-    Reply, ForgotPassword, ResetPassword,ChangePassword, RefreshToken, UploadImg, MemberCenter, LogoutAccessToken, LogoutRefreshToken
-from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board
+from api.resource.user import Login, FollowBoard, FollowArticle, Discuss,Reply, ForgotPassword, ResetPassword,ChangePassword, \
+Following,RefreshToken, UploadImg, MemberCenter, LogoutAccessToken, LogoutRefreshToken
+from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board, Search
 
 class App(InitAPP):
     @staticmethod
@@ -119,12 +115,10 @@ class App(InitAPP):
         api.add_resource(AllBoards,'/boards')
         api.add_resource(Board, '/board/<string:board_name>')
         api.add_resource(ArticlePage, '/<string:board_name>/<string:article_number>')
-        # api.add_resource(Article_Left_Join,'/left_join/<string:board>/<string:article_number>')
         api.add_resource(Login, '/login')
         api.add_resource(FollowBoard, '/follow/<string:board_name>')
-        api.add_resource(GetFollowingBoards,'/following_boards')
         api.add_resource(FollowArticle, '/follow/<string:board_name>/<string:article_number>')
-        api.add_resource(GetFollowingArticles,'/following_articles')
+        api.add_resource(Following,'/following')
         api.add_resource(Discuss, '/discuss')
         api.add_resource(Reply, '/reply')
         api.add_resource(ForgotPassword, '/forgotpassword')
@@ -135,4 +129,5 @@ class App(InitAPP):
         api.add_resource(MemberCenter, '/member_center')
         api.add_resource(LogoutAccessToken, '/logout_access_token')
         api.add_resource(LogoutRefreshToken, '/logout_refresh_token')
+        api.add_resource(Search, '/search')        
         return app

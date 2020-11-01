@@ -3,35 +3,45 @@ from api import InitAPP
 from api.model.boardArticle import LinkValidate
 from flask_restful import Resource, reqparse
 import re
+from flask_jwt_extended import (
+    JWTManager, jwt_required, get_jwt_identity,
+    create_access_token, create_refresh_token,
+    jwt_refresh_token_required, get_raw_jwt
+)
+from api.model.user import UserModel
 
-class Index(LinkValidate, Resource):
+class Index(UserModel,Resource):
+    @jwt_required 
     def get(self):
         index = dict()
         connection = self.connection()
         cursor = connection.cursor()
-        # distinct_board_name_top = list()
-        # sql = "SELECT DISTINCT board_name FROM Category"
-        # cursor = connection.cursor()
-        # cursor.execute(sql)
-        # distinct_board_name = cursor.fetchall()
-        # for board_name in distinct_board_name:
-        #     sql = "SELECT * FROM Articles WHERE board_name = '{}' AND trim(content_snapshot)!='' ORDER BY amount_of_discussions DESC LIMIT 1".format(board_name['board_name'])
-        #     cursor.execute(sql)
-        #     res = cursor.fetchone()
-        #     if res:
-        #         distinct_board_name_top.append(res)
         sql = 'SELECT * FROM IndexArticles'
         cursor.execute(sql)
-        index['articles'] = cursor.fetchall()
-        index['image'] = '/index.jpg'      
+        index_articles = cursor.fetchall()  
         sql = "SELECT * FROM Top8AmountOfLikesBoards ORDER BY amount_of_likes DESC LIMIT 8"
         cursor.execute(sql)
         index['top_8_amount_of_likes_boards'] = cursor.fetchall()
+        # uuid = get_jwt_identity()[0]
+        uuid = get_jwt_identity()
+        following_articles = list()
+        index_articles_add_is_following = list()
+        for _ in self.get_following_articles(uuid):
+            following_articles.append(_['article_number'])
+        for _ in index_articles:
+            if _['article_number'] in following_articles:
+                _['is_following'] = True
+                index_articles_add_is_following.append(_)
+            else:
+                _['is_following'] = False
+                index_articles_add_is_following.append(_)
+        index['articles'] = index_articles_add_is_following
         connection.close()
         return jsonify(index)
 
 class Board(LinkValidate, Resource):
-    def get(self, board_name, order_by='create_time', limit='200'):
+    @jwt_required 
+    def get(self, board_name, order_by='create_time', limit='50'):
         res = self.is_link(board_name)
         if res['respon_code'] == self.resource_found:
             connection = self.connection()
@@ -53,6 +63,7 @@ class Board(LinkValidate, Resource):
             return {'msg':'Get an error'},500
 
 class AllBoards(LinkValidate, Resource):
+    @jwt_required 
     def get(self):
         connection = self.connection()
         if connection:
@@ -66,7 +77,8 @@ class AllBoards(LinkValidate, Resource):
         else:
             return {'msg':'MySQL offline'},500
 
-class ArticlePage(LinkValidate, Resource):
+class ArticlePage(UserModel, Resource):
+    @jwt_required 
     def get(self, board_name, article_number):
         res = self.is_link(board_name,article_number)
         if res['respon_code'] == self.resource_found:
@@ -81,7 +93,7 @@ class ArticlePage(LinkValidate, Resource):
                 cursor.execute(sql)
                 reply_from_pttLite = cursor.fetchall()
                 article = dict()
-                article_page = dict()
+                # article_page = dict()
                 article['board_name'] = article_fetch['board_name']
                 article['article_number'] = article_fetch['article_number']
                 article['article_url'] = article_fetch['article_url']
@@ -96,84 +108,32 @@ class ArticlePage(LinkValidate, Resource):
                 article['create_time'] = article_fetch['create_time']
                 article['last_update'] = article_fetch['last_update']
                 article['discussions'] = article_discussions
+                article['is_following'] = False
                 article['reply_from_pttLite'] = reply_from_pttLite
-                article_page['article_page'] = article
+                uuid = get_jwt_identity()
+                for _ in self.get_following_articles(uuid):
+                    if _['article_number'] == article['article_number']:
+                        article['is_following'] = True
+                # article_page['article_page'] = article
                 connection.close()
-                return jsonify(article_page)
+                return jsonify(article)
             else:
                 return {'msg':'MySQL offline'},500
         else:
             return self.analysis_return(res)
 
-def search():
-    cursor = connection.cursor()
-    if request.method == 'POST':
-        keyWord = request.form.get('keyWord')
-        connection = self.connection()
-        cursor = connection.cursor()
-        sql = "SELECT * FROM Articles WHERE title LIKE '{}'".format('%' + keyWord + '%')
-        cursor.execute(sql)
-        searchingResult = cursor.fetchall()
-        connection.close()
-        return jsonify('search.html', searchingResult=searchingResult)
-
-class BoardToList(LinkValidate, Resource):
+class Search(UserModel,Resource):
     def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            'key_word', type=str, required=True, help='required key_word'
+        )
+        data = parser.parse_args()
+        key_word = data['key_word']
         connection = self.connection()
         cursor = connection.cursor()
-        sql = "SELECT DISTINCT board_name FROM Category ORDER BY board_name ASC"
+        sql = "SELECT * FROM Articles WHERE title LIKE '{}'".format('%'+key_word+'%')
         cursor.execute(sql)
-        distinct_board_name = cursor.fetchall()
-        board_to_list = dict()
-        i = 0
-        for d in distinct_board_name:
-            board_to_list[str(d['board_name'])] = str(i)
-            i += 1
+        searching_result = cursor.fetchall()
         connection.close()
-        return jsonify(board_to_list)
-
-class Article_Left_Join(LinkValidate, Resource):
-    def get(self, board, article_number):
-        connection = self.connection()
-        cursor = connection.cursor()
-        sql = "SELECT * FROM Articles WHERE board_name = '{}' AND article_number = '{}'".format(board, article_number)
-        cursor.execute(sql)
-        if cursor.fetchone():
-            sql = "SELECT * FROM Articles WHERE article_number = '{}'".format(article_number)
-            cursor.execute(sql)
-            article_content = cursor.fetchone()
-
-            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '{}' and respone_type='推 '".format(article_number)
-            cursor.execute(sql)
-            like = cursor.fetchone()
-
-            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '{}' and respone_type='→ '".format(article_number)
-            cursor.execute(sql)
-            neutral = cursor.fetchone()
-
-            sql = "SELECT COUNT(*) FROM ArticleDiscussions WHERE article_number = '{}' and respone_type='噓 '".format(article_number)
-            cursor.execute(sql)
-            diskike = cursor.fetchone()
-
-            sql = "SELECT * FROM ArticleDiscussions LEFT JOIN reply_from_pttLite ON article_discussions.discussion.id  = reply_from_pttLite.article_discussion_id WHERE ArticleDiscussions.article_number = '%s'" % (
-                article_number)
-            cursor.execute(sql)
-            reply_from_pttLite = cursor.fetchall()
-
-            article = dict()
-            article['article_url'] = '/' + article_content['board_name'] + '/' + article_content['article_number']
-            article['board_name'] = article_content['board_name']
-            article['article_number'] = article_content['article_number']
-            article['title'] = article_content['title']
-            article['author'] = article_content['author']
-            article['author_ip'] = article_content['author_ip'].split('(')[-1].replace(')', '')
-            article['body'] = article_content['body']
-            article['push_count'] = article_content['push_count']
-            article['create_time'] = str(article_content['create_time'])
-            article['discussions'] = reply_from_pttLite
-            connection.close()
-            return jsonify(article)
-
-        else:
-            connection.close()
-            return {'message': 'article not found'}, 404
+        return jsonify(searching_result)

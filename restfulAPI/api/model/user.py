@@ -32,30 +32,20 @@ class UserModel(LinkValidate):
         return generate_password_hash(password)
 
     def validate_password(self,email,password):
+        sql = "SELECT pw_hash,user_uuid FROM Users WHERE email = '{}'".format(email)
         connection = self.connection()
-        if connection:
-            try:
-                sql = "SELECT pw_hash,user_uuid FROM Users WHERE email = '{}'".format(email)
-                cursor = connection.cursor()
-                cursor.execute(sql)
-                res = cursor.fetchone()
-                password_hash = res['pw_hash']
-                uuid = res['user_uuid']
-                connection.close()
-            except:
-                connection.rollback()
-                self.mysql_respon['respon_code'] = self.mysql_error
-                return self.mysql_respon
-            else:
-                if check_password_hash(password_hash,password):
-                    self.mysql_respon['respon_code'] = self.valid
-                    self.mysql_respon['respon_content'] = uuid
-                    return self.mysql_respon
-                else:
-                    self.mysql_respon['respon_code'] = self.invalid
-                    return self.mysql_respon
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        res = cursor.fetchone()
+        password_hash = res['pw_hash']
+        uuid = res['user_uuid']
+        connection.close()
+        if check_password_hash(password_hash,password):
+            self.mysql_respon['respon_code'] = self.valid
+            self.mysql_respon['respon_content'] = uuid
+            return self.mysql_respon
         else:
-            self.mysql_respon['respon_code'] = self.mysql_offline
+            self.mysql_respon['respon_code'] = self.invalid
             return self.mysql_respon
 
     def get_user_data(self,email):
@@ -79,53 +69,83 @@ class UserModel(LinkValidate):
         return res
 
     def follow(self,*args):
-        if len(args) == int(1):
-            sql = ''
-            
-        elif len(args) == int(2):
-            res = dict()
-            res = self.is_link(args[1])
+        if len(args) == int(2):
+            uuid = args[0]
+            board_name = args[1]
+            res = self.is_link(board_name)
             if res['respon_code'] == self.resource_found:
-                sql = "SELECT * FROM FollowingBoards WHERE user_uuid='{}' AND board_name ='{}'".format(args[0],args[1])
+                sql = "SELECT * FROM FollowingBoards WHERE user_uuid='{}' AND board_name ='{}'".format(uuid,board_name)
                 connection = self.connection()
                 cursor = connection.cursor()
                 cursor.execute(sql)
-
                 if cursor.fetchone():
-                    res['sql'] = "DELETE FROM FollowingBoards WHERE user_uuid='{}'AND board_name ='{}'".format(args[0],args[1])
+                    res['sql'] = "DELETE FROM FollowingBoards WHERE user_uuid='{}'AND board_name ='{}'".format(uuid,board_name)
                     self.db_commit_rollback(res)
                     res['respon_code'] = self.delete_success
                     return res
                 else:
-                    res['sql'] = sql = "INSERT INTO FollowingBoards(user_uuid,board_name,create_time) VALUES('{}','{}',now())".format(args[0],args[1])
+                    res['sql'] = sql = "INSERT INTO FollowingBoards(user_uuid,board_name,create_time) VALUES('{}','{}',now())".format(uuid,board_name)
                     self.db_commit_rollback(res)
                     res['respon_code'] = self.post_success
                     return res
             else:
                 res
-
         elif len(args) == int(3):
-            res = self.is_link(args[1],args[2])
-            article_url = "/" + args[1] + "/" + args[2]
+            uuid = args[0]
+            board_name = args[1]
+            article_number = args[2]
+            res = self.is_link(board_name,article_number)
+            article_url = "/{}/{}".format(board_name,article_number)
             if res['respon_code'] == self.resource_found:
-                sql = "SELECT * FROM FollowingArticles WHERE user_uuid='{}' AND article_url ='{}'".format(args[0],article_url)
+                sql = "SELECT * FROM FollowingArticles WHERE user_uuid='{}' AND article_url ='{}'".format(uuid,article_url)
                 connection = self.connection()
                 cursor = connection.cursor()
                 cursor.execute(sql)
-
                 if cursor.fetchone():
-                    res['sql'] = "DELETE FROM FollowingArticles WHERE user_uuid='{}' AND article_url ='{}'".format(args[0],article_url)
+                    res['sql'] = "DELETE FROM FollowingArticles WHERE user_uuid='{}' AND article_url ='{}'".format(uuid,article_url)
                     self.db_commit_rollback(res)
                     res['respon_code'] = self.delete_success
                     return res
                 else:
-                    res['sql'] ="INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(args[0],article_url,args[1],args[2])
+                    res['sql'] = "INSERT INTO FollowingArticles(user_uuid,article_url,board_name,article_number,create_time) VALUES('{}','{}','{}','{}',now())".format(uuid,article_url,board_name,article_number)
                     self.db_commit_rollback(res)
                     res['respon_code'] = self.post_success
                     return res
+            else:
+                return res
         else:
-            return self.mysql_error
-        return self.db_commit_rollback(res)
+            res['respon_code'] = self.resource_not_found
+            return res
+
+    def unfollow(self,*args):
+        if len(args) == int(2):
+            uuid = args[0]
+            board_name = args[1]
+            res = self.is_link(args[1])
+            if res['respon_code'] == self.resource_found:
+                res['sql'] = "DELETE FROM FollowingBoards WHERE user_uuid='{}'AND board_name ='{}'".format(uuid,board_name)
+                self.db_commit_rollback(res)
+                res['respon_code'] = self.delete_success
+                return res
+            else:
+                res
+        elif len(args) == int(3):
+            uuid = args[0]
+            board_name = args[1]
+            article_number = args[2]
+            res = self.is_link(board_name,article_number)
+            article_url = "/{}/{}".format(board_name,article_number)
+
+            if res['respon_code'] == self.resource_found:
+                res['sql'] = "DELETE FROM FollowingArticles WHERE user_uuid='{}' AND article_url ='{}'".format(args[0],article_url)
+                self.db_commit_rollback(res)
+                res['respon_code'] = self.delete_success
+                return res
+            else:
+                return res
+        else:
+            res['respon_code'] = self.resource_not_found
+            return res
 
     def get_following_boards(self,uuid):
         # sql = "SELECT board_name,create_time FROM FollowingBoards WHERE user_uuid = (SELECT id FROM users WHERE email ='{}')".format(email)
@@ -133,9 +153,9 @@ class UserModel(LinkValidate):
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
-        res = cursor.fetchall()
+        following_boards = cursor.fetchall()
         connection.close()
-        return res
+        return following_boards
 
     def get_following_articles(self,uuid):
         # sql = "SELECT article_url,create_time FROM FollowingArticles WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
@@ -143,9 +163,9 @@ class UserModel(LinkValidate):
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
-        res = cursor.fetchall()
+        following_articles = cursor.fetchall()
         connection.close()
-        return res
+        return following_articles
 
     def discuss_or_reply(self,*args):
         if len(args) == int(6):
@@ -393,10 +413,10 @@ class UserModel(LinkValidate):
 
     def member_data(self,uuid):
         user_data = dict()
-        user_data['following_boards'] = self.get_following_boards(uuid)
-        user_data['following_articles'] = self.get_following_articles(uuid)
-        user_data['my_reply'] = self.my_reply(uuid)
-        user_data['my_discussions'] = self.my_discussions(uuid)
+        # user_data['following_boards'] = self.get_following_boards(uuid)
+        # user_data['following_articles'] = self.get_following_articles(uuid)
+        # user_data['my_reply'] = self.my_reply(uuid)
+        # user_data['my_discussions'] = self.my_discussions(uuid)
         user_data['login_records'] = self.get_login_records(uuid)
 
         sql = "SELECT nickname,email FROM Users WHERE user_uuid = '{}'".format(uuid)
@@ -428,3 +448,11 @@ class UserModel(LinkValidate):
 
         connection.close()
         return user_data
+
+    def user_privileges(self,user_uuid):
+        sql = "SELECT user_privileges FROM Users WHERE user_uuid ='{}'".format(user_uuid)
+        connection = self.connection()
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        return cursor.fetchone()['user_privileges']
+        
