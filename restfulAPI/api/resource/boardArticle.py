@@ -101,6 +101,7 @@ class ArticlePage(UserModel, Resource):
                 sql = "SELECT nu,respone_type,respone_user_id,reply,respone_user_ip,create_time,last_update FROM ReplyFromPttLite WHERE board_name ='{}' AND article_number ='{}'".format(board_name, article_number)
                 cursor.execute(sql)
                 reply_from_pttLite = cursor.fetchall()
+                uuid = get_jwt_identity()
                 article = dict()
                 # article_page = dict()
                 article['board_name'] = article_fetch['board_name']

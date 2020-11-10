@@ -14,7 +14,7 @@ class Config():
     JWT_TOKEN_LOCATION = ['headers', 'query_string']
     PROPAGATE_EXCEPTIONS = True
     JWT_ACCESS_TOKEN_EXPIRES = int(900)
-    JWT_REFRESH_TOKEN_EXPIRES = int(86400)
+    JWT_REFRESH_TOKEN_EXPIRES = int(86400)*int(30)
     JWT_ALGORITHM = 'HS256'
 
     #JWT - Header Options

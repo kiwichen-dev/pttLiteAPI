@@ -58,12 +58,6 @@ class Article_discuss(connection.Model):
                 self.article_url, self.discuss_respon, self.discuss_user_id, self.discuss, self.respone_user_ip, self.create_time, self.last_update)
 """
 
-class Pushcount():
-    def __init__(self):
-        self.__good = list()
-        self.__neutral = list()
-        self.__bad = list()
-
 class LinkValidate(InitAPP):
     def is_link(self,*args):
         if len(args) == int(1):
@@ -89,3 +83,11 @@ class LinkValidate(InitAPP):
                 return self.mysql_respon
         else:
             return self.mysql_offline
+
+class pagenation(InitAPP):
+    def discussion(self):
+        sel = "SELECT COUNT(*) FROM `ArticleDiscussions` WHERE board_name = '{}' AND article_number = '{}'".format(board_name,article_number)
+        connection = self.connection()
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        amount = int(cursor.fetchall()['COUNT(*)'])
