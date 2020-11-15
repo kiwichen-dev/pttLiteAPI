@@ -45,4 +45,4 @@ services:
       - PORT=3306
       - MAX_ALLOWED_PACKET=16M
     ports:
-      - 8080:8000
+      - 8000:8000
