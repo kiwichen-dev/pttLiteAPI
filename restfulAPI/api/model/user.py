@@ -454,7 +454,7 @@ class UserModel(LinkValidate):
         return cursor.fetchone()['user_privileges']
         
     def user_images(self,uuid,albums,image_name):
-        if albums = 'icon':
+        if albums == 'icon':
             icon_path = 'imgs/{}/icon/'.format(uuid)
             try:
                 files = listdir(icon_path)
