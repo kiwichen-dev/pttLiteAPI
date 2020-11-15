@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import current_app
+from flask import Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from api import InitAPP
 from flask_jwt_extended import (
@@ -418,7 +418,6 @@ class UserModel(LinkValidate):
         # user_data['my_reply'] = self.my_reply(uuid)
         # user_data['my_discussions'] = self.my_discussions(uuid)
         user_data['login_records'] = self.get_login_records(uuid)
-
         sql = "SELECT nickname,email FROM Users WHERE user_uuid = '{}'".format(uuid)
         connection = self.connection()
         cursor = connection.cursor()
@@ -433,26 +432,36 @@ class UserModel(LinkValidate):
             files = listdir(icon_path)
         except:
             connection.close()
-            cursor.close()
             return user_data
-
         for f in files:
-            if ('.' in f) and ( f.rsplit('.', 1)[1].lower() in {'jpg','png','jpeg'} ):
+            if ('.' in f) and (f.rsplit('.',1)[1].lower() in {'jpg','png','jpeg'}):
                 icon_path = icon_path + str(f)
                 print(icon_path)
                 with open(r'{}'.format(icon_path), 'rb') as icon_path:
-                    user_icon = base64.b64encode(icon_path.read())
-                    user_data['user_icon'] = str(user_icon)
+                    # user_icon = base64.b64encode(icon_path.read())
+                    # user_data['user_icon'] = str(user_icon)
+                    user_data['user_icon'] = str(icon_path)
                     connection.close()
                     return user_data
-
         connection.close()
         return user_data
-
-    def user_privileges(self,user_uuid):
-        sql = "SELECT user_privileges FROM Users WHERE user_uuid ='{}'".format(user_uuid)
+        
+    def user_privileges(self,uuid):
+        sql = "SELECT user_privileges FROM Users WHERE user_uuid ='{}'".format(uuid)
         connection = self.connection()
         cursor = connection.cursor()
         cursor.execute(sql)
         return cursor.fetchone()['user_privileges']
         
+    def user_images(self,uuid,albums,image_name):
+        if albums = 'icon':
+            icon_path = 'imgs/{}/icon/'.format(uuid)
+            try:
+                files = listdir(icon_path)
+            except:
+                return
+            for f in files:
+                if ('.' in f) and (f.split('.',1)[1].lower() in {'jpg','jpeg','jpeg'}):
+                    print(icon_path)
+                    with open (r'{}'.format(icon_path),'rb') as icon_path:
+                        return str(icon_path)

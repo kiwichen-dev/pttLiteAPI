@@ -29,3 +29,20 @@ services:
     ports:
       - 80:80
       - 443:443
+
+  imagesserver:
+    build: ./imagesServer
+    container_name: Images_Server
+    restart: always
+    sysctls:
+      - net.core.somaxconn=4096
+    environment:
+      - HOST=192.168.30.136
+      - USER=flask
+      - PASSWORD=quQ351dTx
+      - DB=PTTLite
+      - CHARSET=utf8mb4
+      - PORT=3306
+      - MAX_ALLOWED_PACKET=16M
+    ports:
+      - 8080:8080
