@@ -106,7 +106,7 @@ class InitAPP():
 
 from api.resource.user import Login, FollowBoard, FollowArticle, Discuss,Reply, ForgotPassword, ResetPassword,ChangePassword, \
 Following,RefreshToken, UploadImg, MemberCenter, LogoutAccessToken, LogoutRefreshToken
-from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board, Search
+from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board, Search, ArticleDiscussions
 
 class App(InitAPP):
     @staticmethod
