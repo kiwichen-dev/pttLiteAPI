@@ -253,3 +253,7 @@ class LogoutRefreshToken(UserModel,Resource):
         jti = get_raw_jwt()['jti']
         blacklist.add(jti)
         return {"msg": "Successfully logged out"}, 200
+
+class Images(UserModel,Resource):
+    def get(self,albums,image_name):
+        pass

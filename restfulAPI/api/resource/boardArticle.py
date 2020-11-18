@@ -92,45 +92,46 @@ class ArticlePage(UserModel, Resource):
         res = self.is_link(board_name,article_number)
         if res['respon_code'] == self.resource_found:
             connection = self.connection()
-            if connection:
-                cursor = connection.cursor()
-                article_fetch = res['respon_content']
-                sql = "SELECT nu,from_pttLite,respone_type,respone_user_id,discussion,respone_user_ip,create_time FROM ArticleDiscussions WHERE article_number ='{}'".format(article_number)
-                cursor.execute(sql)
-                article_discussions = cursor.fetchall()
-                sql = "SELECT nu,respone_type,respone_user_id,reply,respone_user_ip,create_time,last_update FROM ReplyFromPttLite WHERE board_name ='{}' AND article_number ='{}'".format(board_name, article_number)
-                cursor.execute(sql)
-                reply_from_pttLite = cursor.fetchall()
-                uuid = get_jwt_identity()
-                article = dict()
-                # article_page = dict()
-                article['board_name'] = article_fetch['board_name']
-                article['article_number'] = article_fetch['article_number']
-                article['article_url'] = article_fetch['article_url']
-                article['title'] = article_fetch['title']
-                article['author'] = article_fetch['author']
-                article['ip_location'] = article_fetch['ip_location']
-                article['content'] = article_fetch['content']
-                article['amount_of_discussions'] = article_fetch['amount_of_discussions']
-                article['amount_of_likes'] = article_fetch['amount_of_likes']
-                article['amount_of_neutrals'] = article_fetch['amount_of_neutrals']
-                article['amount_of_dislikes'] = article_fetch['amount_of_dislikes']
-                article['create_time'] = article_fetch['create_time']
-                article['last_update'] = article_fetch['last_update']
-                article['discussions'] = article_discussions
-                article['is_following'] = False
-                article['reply_from_pttLite'] = reply_from_pttLite
-                uuid = get_jwt_identity()
-                for _ in self.get_following_articles(uuid):
-                    if _['article_number'] == article['article_number']:
-                        article['is_following'] = True
-                # article_page['article_page'] = article
-                connection.close()
-                return jsonify(article)
-            else:
-                return {'msg':'MySQL offline'},500
+            cursor = connection.cursor()
+            article_fetch = res['respon_content']
+            sql = "SELECT nu,respone_type,respone_user_id,reply,respone_user_ip,create_time,last_update FROM ReplyFromPttLite WHERE board_name ='{}' AND article_number ='{}'".format(board_name, article_number)
+            cursor.execute(sql)
+            reply_from_pttLite = cursor.fetchall()
+            uuid = get_jwt_identity()
+            article = dict()
+            article['board_name'] = article_fetch['board_name']
+            article['article_number'] = article_fetch['article_number']
+            article['article_url'] = article_fetch['article_url']
+            article['title'] = article_fetch['title']
+            article['author'] = article_fetch['author']
+            article['ip_location'] = article_fetch['ip_location']
+            article['content'] = article_fetch['content']
+            article['amount_of_discussions'] = article_fetch['amount_of_discussions']
+            article['amount_of_likes'] = article_fetch['amount_of_likes']
+            article['amount_of_neutrals'] = article_fetch['amount_of_neutrals']
+            article['amount_of_dislikes'] = article_fetch['amount_of_dislikes']
+            article['create_time'] = article_fetch['create_time']
+            article['last_update'] = article_fetch['last_update']
+            article['is_following'] = False
+            article['reply_from_pttLite'] = reply_from_pttLite
+            uuid = get_jwt_identity()
+            for _ in self.get_following_articles(uuid):
+                if _['article_number'] == article['article_number']:
+                    article['is_following'] = True
+            connection.close()
+            return jsonify(article)
         else:
             return self.analysis_return(res)
+
+class ArticleDiscussions(UserModel,Resource):
+    def get(self,article_number,offense=0):
+        sql = "SELECT nu,from_pttLite,respone_type,respone_user_id,discussion,respone_user_ip,create_time FROM ArticleDiscussions WHERE article_number ='{}'".format(article_number)
+        connection = self.connection()
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        article_discussions = cursor.fetchall()
+        connection.close()
+        return jsonify(article_discussions)
 
 class Search(UserModel,Resource):
     def get(self):

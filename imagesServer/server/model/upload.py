@@ -1,26 +1,34 @@
 from flask import Response
 from flask_restful import Resource
-from flask_jwt_extended import (
-    JWTManager, jwt_required, get_jwt_identity,
-    create_access_token, create_refresh_token,
-    jwt_refresh_token_required, get_raw_jwt
-)
+from server import InitAPP
+import os
 
-class Upload_images(Resource):
-    @jwt_required
-    def get(self,img_file):
-        uuid = get_jwt_identity()
-        print(uuid)
-        with open(r'static/{}'.format(img_file), 'rb') as f:
-            print('static/{}'.format(img_file))
-            image = f.read()
-            resp = Response(image, mimetype="image/png")
-            return resp
+class Upload():
+    def uploadFiles(self,img_file):
+        is_img = self.is_allowed_file(img_file)
+        if img_file and is_img[0]:
+            dirname = 'static/'
+            os.makedirs(dirname,mode=0o777,exist_ok=True)
+            save_path = os.path.join( dirname, img_file.filename )
+            img_file.save(save_path)
+            del img_file
+            del is_img
+            return True
+        else:
+            del img_file
+            del is_img
+            return False
 
-    @jwt_required
-    def post(self,img_file):
-        with open(r'static/{}'.format(img_file), 'rb') as f:
-            print('static/{}'.format(img_file))
-            image = f.read()
-            resp = Response(image, mimetype="image/png")
-            return resp
+    def is_allowed_file(self,uploadFile):
+        if '.' in uploadFile.filename:
+            filename = uploadFile.filename
+            ext = uploadFile.filename.rsplit('.', 1)[1].lower()
+            if ext in {'png','jpg', 'jpeg'}:
+                del uploadFile
+                return True,filename,ext
+            else:
+                del uploadFile
+                return True,filename,ext
+        else:
+            del uploadFile
+            return False

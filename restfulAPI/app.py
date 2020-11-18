@@ -1,4 +1,4 @@
-from api import App
+import App
 
 app = App.create_app()
 
