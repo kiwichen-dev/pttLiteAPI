@@ -39,9 +39,12 @@ class Index(UserModel,Resource):
 class Top8AmountOfLikesBoards(UserModel,Resource):
     @jwt_required
     def get(self):
+        connection = self.connection()
+        cursor = connection.cursor()
         sql = "SELECT * FROM Top8AmountOfLikesBoards ORDER BY amount_of_likes DESC LIMIT 8"
         cursor.execute(sql)
         res = cursor.fetchall()
+        connection.close()
         return jsonify(res)
 
 class Board(LinkValidate, Resource):
