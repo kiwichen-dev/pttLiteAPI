@@ -106,7 +106,7 @@ class InitAPP():
 
 from api.resource.user import Login, FollowBoard, FollowArticle, Discuss,Reply, ForgotPassword, ResetPassword,ChangePassword, \
 Following,RefreshToken, MemberCenter, LogoutAccessToken, LogoutRefreshToken
-from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board, Search, ArticleDiscussions
+from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board, Search, ArticleDiscussions, Top8AmountOfLikesBoards
 
 class App(InitAPP):
     @staticmethod
@@ -130,4 +130,5 @@ class App(InitAPP):
         api.add_resource(LogoutAccessToken, '/logout_access_token')
         api.add_resource(LogoutRefreshToken, '/logout_refresh_token')
         api.add_resource(Search, '/search')       
+        api.add_resource)(Top8AmountOfLikesBoards,'/hotbards')
         return app
