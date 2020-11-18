@@ -17,6 +17,17 @@ class Images(InitAPP,Resource):
             resp = Response(image, mimetype="image/png")
             return resp
 
+class FrontendImages(InitAPP,Resource):
+    def get(self,folder_name,img_file):
+        try:
+            with open(r'static/frontend/{}/{}'.format(folder_name,img_file), 'rb') as f:
+                print('static/frontend/{}/{}'.format(folder_name,img_file))
+                image = f.read()
+                resp = Response(image, mimetype="image/png")
+                return resp
+        except:
+            return {'msg':'not found'},404
+
 class Upload_images(InitAPP,Upload,Resource):
     @jwt_required
     def post(self):
@@ -31,6 +42,6 @@ class Upload_images(InitAPP,Upload,Resource):
             parser.add_argument('images', type=FileStorage,location='files',help="jpg jpeg png only")
             img_file = parser.parse_args().get('images')
             if self.uploadFiles(img_file):
-                return {'msg': '201'}
+                return {'msg': '201'},201
             else:
-                return {'msg':'401'}
+                return {'msg':'401'},401

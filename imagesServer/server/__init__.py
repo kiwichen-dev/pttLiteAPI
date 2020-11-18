@@ -76,9 +76,10 @@ class InitAPP():
         )
         return connection
 
-from server.resource.upload import Images,Upload_images
+from server.resource.upload import Images,Upload_images,FrontendImages
 
 def create_app():
     api.add_resource(Images,'/images/<img_file>')
+    api.add_resource(FrontendImages,'/images/frontend/<string:folder_name>/<string:img_file>')
     api.add_resource(Upload_images,'/upload_images')
     return app
