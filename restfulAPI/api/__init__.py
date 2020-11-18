@@ -105,7 +105,7 @@ class InitAPP():
             return res
 
 from api.resource.user import Login, FollowBoard, FollowArticle, Discuss,Reply, ForgotPassword, ResetPassword,ChangePassword, \
-Following,RefreshToken, UploadImg, MemberCenter, LogoutAccessToken, LogoutRefreshToken
+Following,RefreshToken, MemberCenter, LogoutAccessToken, LogoutRefreshToken
 from api.resource.boardArticle import Index, AllBoards, ArticlePage, Board, Search, ArticleDiscussions
 
 class App(InitAPP):
@@ -126,7 +126,6 @@ class App(InitAPP):
         api.add_resource(ResetPassword, '/resetpassword/<token>')
         api.add_resource(ChangePassword,'/change_password')
         api.add_resource(RefreshToken, '/refresh_toekn')
-        api.add_resource(UploadImg, '/upload_img')
         api.add_resource(MemberCenter, '/member_center')
         api.add_resource(LogoutAccessToken, '/logout_access_token')
         api.add_resource(LogoutRefreshToken, '/logout_refresh_token')
