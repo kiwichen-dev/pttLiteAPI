@@ -130,7 +130,6 @@ class ChangePassword(UserModel,Resource):
         data = parser.parse_args()
         password = data['password']
         repeat_password = data['repeat_password']
-
         if password == repeat_password:
             if self.change_password(uuid,password):
                 return {'msg':'password changed!'},201
@@ -172,6 +171,7 @@ class Discuss(UserModel,Resource):
         respone_user_ip = data['respone_user_ip']
         res = self.discuss_or_reply(board_name,article_number,respone_type,respone_user_id,discussion,respone_user_ip)
         return self.analysis_return(res)
+
     @jwt_required
     def put(self):
         pass
@@ -225,15 +225,6 @@ class RefreshToken(UserModel,Resource):
         else:
             return {'msg':'invaild token'},401
 
-class UploadImg(UserModel,Resource):
-    @jwt_required
-    def post(self):
-        uuid = get_jwt_identity()
-        if self.uploadFiles(uuid):
-            return {'msg':'sucess'}, 201
-        else:
-            return {'msg':'png,jpg,jpeg only'}, 400
-
 class MemberCenter(UserModel,Resource):
     @jwt_required
     def post(self):
@@ -253,7 +244,3 @@ class LogoutRefreshToken(UserModel,Resource):
         jti = get_raw_jwt()['jti']
         blacklist.add(jti)
         return {"msg": "Successfully logged out"}, 200
-
-class Images(UserModel,Resource):
-    def get(self,albums,image_name):
-        pass

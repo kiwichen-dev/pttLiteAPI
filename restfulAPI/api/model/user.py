@@ -362,6 +362,9 @@ class UserModel(LinkValidate):
             del img_file
             del is_img
             return False
+    
+    def upload_images(self,img_file):
+        pass
 
     def is_allowed_file(self,uploadFile):
         if '.' in uploadFile.filename:

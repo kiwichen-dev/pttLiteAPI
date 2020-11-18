@@ -115,7 +115,7 @@ class App(InitAPP):
         api.add_resource(AllBoards,'/boards')
         api.add_resource(Board, '/board/<string:board_name>')
         api.add_resource(ArticlePage, '/<string:board_name>/<string:article_number>')
-        api.add_resource(ArticleDiscussions,'/discussions/<string:article_number>')
+        api.add_resource(ArticleDiscussions,'/article_discussions/<string:article_number>')
         api.add_resource(Login, '/login')
         api.add_resource(FollowBoard, '/follow/<string:board_name>')
         api.add_resource(FollowArticle, '/follow/<string:board_name>/<string:article_number>')

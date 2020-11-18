@@ -50,15 +50,28 @@ class InitAPP():
         self.mysql_respon['respon_content'] = None
         self.mysql_respon['sql'] = None
     
+    # @staticmethod
+    # def connection():
+    #     connection = pymysql.connect(
+    #     host="192.168.31.194",
+    #     port=int(3306),
+    #     user="flask",
+    #     password="quQ351dTx",
+    #     db="PTTLite",
+    #     max_allowed_packet="16M",
+    #     cursorclass=pymysql.cursors.DictCursor
+    #     )
+    #     return connection
+
     @staticmethod
     def connection():
         connection = pymysql.connect(
-        host="192.168.31.194",
-        port=int(3306),
-        user="flask",
-        password="quQ351dTx",
-        db="PTTLite",
-        max_allowed_packet="16M",
+        host=os.environ['HOST'],
+        port=int(os.environ['PORT']),
+        user=os.environ['USER'],
+        password=os.environ['PASSWORD'],
+        db=os.environ['DB'],
+        max_allowed_packet=os.environ['MAX_ALLOWED_PACKET'],
         cursorclass=pymysql.cursors.DictCursor
         )
         return connection

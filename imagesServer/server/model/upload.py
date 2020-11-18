@@ -23,12 +23,12 @@ class Upload():
         if '.' in uploadFile.filename:
             filename = uploadFile.filename
             ext = uploadFile.filename.rsplit('.', 1)[1].lower()
-            if ext in {'png','jpg', 'jpeg'}:
+            if ext in {'png','jpg','jpeg'}:
                 del uploadFile
                 return True,filename,ext
             else:
                 del uploadFile
-                return True,filename,ext
+                return False,filename,ext
         else:
             del uploadFile
             return False

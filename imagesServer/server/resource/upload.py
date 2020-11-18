@@ -28,9 +28,9 @@ class Upload_images(InitAPP,Upload,Resource):
         if cursor.fetchone():
             connection.close()
             parser = reqparse.RequestParser()
-            parser.add_argument('userIcon', type=FileStorage,location='files',help="userIcon is wrong.")
-            img_file = parser.parse_args().get('userIcon')
+            parser.add_argument('images', type=FileStorage,location='files',help="jpg jpeg png only")
+            img_file = parser.parse_args().get('images')
             if self.uploadFiles(img_file):
-                return {'msg':'201'}
+                return {'msg': '201'}
             else:
                 return {'msg':'401'}
