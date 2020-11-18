@@ -19,9 +19,6 @@ class Index(UserModel,Resource):
         sql = 'SELECT * FROM IndexArticles'
         cursor.execute(sql)
         index_articles = cursor.fetchall()  
-        sql = "SELECT * FROM Top8AmountOfLikesBoards ORDER BY amount_of_likes DESC LIMIT 8"
-        cursor.execute(sql)
-        index['top_8_amount_of_likes_boards'] = cursor.fetchall()
         # uuid = get_jwt_identity()[0]
         uuid = get_jwt_identity()
         following_articles = list()
@@ -38,6 +35,14 @@ class Index(UserModel,Resource):
         index['articles'] = index_articles_add_is_following
         connection.close()
         return jsonify(index)
+
+class Top8AmountOfLikesBoards(UserModel,Resource):
+    @jwt_required
+    def get(self):
+        sql = "SELECT * FROM Top8AmountOfLikesBoards ORDER BY amount_of_likes DESC LIMIT 8"
+        cursor.execute(sql)
+        res = cursor.fetchall()
+        return jsonify(res)
 
 class Board(LinkValidate, Resource):
     @jwt_required 
