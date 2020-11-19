@@ -130,5 +130,5 @@ class App(InitAPP):
         api.add_resource(LogoutAccessToken, '/logout_access_token')
         api.add_resource(LogoutRefreshToken, '/logout_refresh_token')
         api.add_resource(Search, '/search')
-        api.add_resource(Top8AmountOfLikesBoards, '/hotbords')
+        api.add_resource(Top8AmountOfLikesBoards, '/hotboards')
         return app
