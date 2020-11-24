@@ -148,7 +148,6 @@ class UserModel(LinkValidate):
             return res
 
     def get_following_boards(self,uuid):
-        # sql = "SELECT board_name,create_time FROM FollowingBoards WHERE user_uuid = (SELECT id FROM users WHERE email ='{}')".format(email)
         sql = "SELECT * FROM FollowingBoards WHERE user_uuid = '{}'".format(uuid)
         connection = self.connection()
         cursor = connection.cursor()
@@ -158,7 +157,6 @@ class UserModel(LinkValidate):
         return following_boards
 
     def get_following_articles(self,uuid):
-        # sql = "SELECT article_url,create_time FROM FollowingArticles WHERE id = (SELECT id FROM users WHERE email ='{}')".format(email)
         sql = "SELECT * FROM FollowingArticles WHERE user_uuid = '{}'".format(uuid)
         connection = self.connection()
         cursor = connection.cursor()

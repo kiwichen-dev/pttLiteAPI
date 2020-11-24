@@ -1,4 +1,4 @@
-from flask import Response
+from flask import Response,jsonify
 from flask_restful import reqparse,Resource
 from flask_jwt_extended import (
     JWTManager, jwt_required, get_jwt_identity,
@@ -9,7 +9,7 @@ from server import InitAPP
 from server.model.upload import Upload
 from werkzeug.datastructures import FileStorage
 
-class Images(InitAPP,Resource):
+class ViewImages(InitAPP,Resource):
     def get(self,img_file):
         with open(r'static/{}'.format(img_file), 'rb') as f:
             print('開啟圖片static/{}'.format(img_file))
@@ -28,7 +28,7 @@ class FrontendImages(InitAPP,Resource):
         except:
             return {'msg':'not found'},404
 
-class Upload_images(InitAPP,Upload,Resource):
+class Upload_images(Upload,Resource):
     @jwt_required
     def post(self):
         uuid = get_jwt_identity()
@@ -39,9 +39,8 @@ class Upload_images(InitAPP,Upload,Resource):
         if cursor.fetchone():
             connection.close()
             parser = reqparse.RequestParser()
-            parser.add_argument('images', type=FileStorage,location='files',help="jpg jpeg png only")
-            img_file = parser.parse_args().get('images')
-            if self.uploadFiles(img_file):
-                return {'msg': '201'},201
-            else:
-                return {'msg':'401'},401
+            parser.add_argument('images',type=FileStorage,location='files',help="jpg jpeg png only",action="append")
+            arg = parser.parse_args()
+            img_files = arg['images']
+            is_upload,img_list = self.uploadFiles(img_files)
+            return jsonify(img_list)

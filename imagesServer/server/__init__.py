@@ -6,6 +6,8 @@ import pymysql.cursors
 import os
 from os import listdir
 from server.config import Config
+import string
+import random
 
 # def imgs(uuid,albums='icon',image_name):
     # if albums = 'icon':
@@ -50,36 +52,40 @@ class InitAPP():
         self.mysql_respon['respon_content'] = None
         self.mysql_respon['sql'] = None
     
-    # @staticmethod
-    # def connection():
-    #     connection = pymysql.connect(
-    #     host="192.168.31.194",
-    #     port=int(3306),
-    #     user="flask",
-    #     password="quQ351dTx",
-    #     db="PTTLite",
-    #     max_allowed_packet="16M",
-    #     cursorclass=pymysql.cursors.DictCursor
-    #     )
-    #     return connection
-
     @staticmethod
     def connection():
         connection = pymysql.connect(
-        host=os.environ['HOST'],
-        port=int(os.environ['PORT']),
-        user=os.environ['USER'],
-        password=os.environ['PASSWORD'],
-        db=os.environ['DB'],
-        max_allowed_packet=os.environ['MAX_ALLOWED_PACKET'],
+        host="192.168.31.194",
+        port=int(3306),
+        user="flask",
+        password="quQ351dTx",
+        db="PTTLite",
+        max_allowed_packet="16M",
         cursorclass=pymysql.cursors.DictCursor
         )
         return connection
 
-from server.resource.upload import Images,Upload_images,FrontendImages
+    @property
+    def random_image_name(self):
+        return ''.join(random.sample(string.ascii_letters + string.digits, 24))
+
+    # @staticmethod
+    # def connection():
+    #     connection = pymysql.connect(
+    #     host=os.environ['HOST'],
+    #     port=int(os.environ['PORT']),
+    #     user=os.environ['USER'],
+    #     password=os.environ['PASSWORD'],
+    #     db=os.environ['DB'],
+    #     max_allowed_packet=os.environ['MAX_ALLOWED_PACKET'],
+    #     cursorclass=pymysql.cursors.DictCursor
+    #     )
+    #     return connection
+
+from server.resource.upload import ViewImages,Upload_images,FrontendImages
 
 def create_app():
-    api.add_resource(Images,'/images/<img_file>')
+    api.add_resource(ViewImages,'/images/<img_file>')
     api.add_resource(FrontendImages,'/images/frontend/<string:folder_name>/<string:img_file>')
     api.add_resource(Upload_images,'/upload_images')
     return app

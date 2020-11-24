@@ -57,6 +57,19 @@ class InitAPP():
         )
         return connection
 
+    # @staticmethod
+    # def connection():
+    #     connection = pymysql.connect(
+    #     host='192.168.31.194',
+    #     port=int(3306),
+    #     user='flask',
+    #     password='quQ351dTx',
+    #     db='PTTLite',
+    #     max_allowed_packet='16M',
+    #     cursorclass=pymysql.cursors.DictCursor
+    #     )
+    #     return connection
+
     @property
     def random_user_id(self):
         return ''.join(random.sample(string.ascii_letters + string.digits, 8))
